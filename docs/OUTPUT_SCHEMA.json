@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ApprovalBrief",
+  "type": "object",
+  "required": ["status", "risk", "actor", "targetSystem", "action", "impact", "rollback", "approvalText", "payloadPreview", "evidence", "errors"],
+  "properties": {
+    "status": { "enum": ["approval-ready", "blocked"] },
+    "risk": { "enum": ["read-only", "draft-only", "write-after-approval", "forbidden"] },
+    "actor": { "type": "string" },
+    "targetSystem": { "type": "string" },
+    "action": { "type": "string" },
+    "impact": { "type": "string" },
+    "rollback": { "type": "string" },
+    "approvalText": { "type": "string" },
+    "payloadPreview": { "type": "string" },
+    "evidence": { "type": "array" },
+    "errors": { "type": "array", "items": { "type": "string" } }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "status": "approval-ready",
+  "risk": "write-after-approval",
+  "targetSystem": "GitHub"
+}

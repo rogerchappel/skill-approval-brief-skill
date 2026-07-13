@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import { test } from "node:test";
 import { classifyRisk, createBrief, validateProposal } from "../src/brief.js";
 
@@ -46,4 +47,12 @@ test("blocks policy-defined forbidden actions", () => {
 test("truncates payload preview", () => {
   const brief = createBrief({ ...valid, payload: { body: "x".repeat(80) } }, { maxPayloadChars: 40 });
   assert.match(brief.payloadPreview, /truncated/);
+});
+
+test("matches expected risk fixture", () => {
+  const expected = JSON.parse(fs.readFileSync("fixtures/expected-risk.json", "utf8"));
+  const brief = createBrief(valid);
+  assert.equal(brief.status, expected.status);
+  assert.equal(brief.risk, expected.risk);
+  assert.equal(brief.targetSystem, expected.targetSystem);
 });

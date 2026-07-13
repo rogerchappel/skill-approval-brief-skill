@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ApprovalProposal",
+  "type": "object",
+  "required": ["actor", "targetSystem", "action", "payloadSummary", "impact", "rollback", "approvalText"],
+  "properties": {
+    "actor": { "type": "string" },
+    "targetSystem": { "type": "string" },
+    "action": { "type": "string" },
+    "mode": { "enum": ["read", "draft", "write"] },
+    "payloadSummary": { "type": "string" },
+    "payload": {},
+    "impact": { "type": "string" },
+    "rollback": { "type": "string" },
+    "approvalText": { "type": "string" }
+  }
+}

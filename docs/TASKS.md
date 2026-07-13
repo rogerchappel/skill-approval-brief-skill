@@ -8,5 +8,5 @@
 - [x] Add fixture-backed tests.
 - [x] Add smoke, check, build, and validation commands.
 - [x] Add README, skill instructions, and release-candidate notes.
-- [ ] Add configurable forbidden-action policy file.
-- [ ] Add JSON schema export.
+- [x] Add configurable forbidden-action policy file.
+- [x] Add JSON schema export.

@@ -1,0 +1,9 @@
+{
+  "actor": "cleanup agent",
+  "targetSystem": "SaaS admin console",
+  "action": "delete account",
+  "payloadSummary": "Remove a customer account.",
+  "impact": "Permanent destructive external write.",
+  "rollback": "No reliable rollback.",
+  "approvalText": "Approve cleanup agent to delete account in the SaaS admin console."
+}

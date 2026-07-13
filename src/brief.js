@@ -6,8 +6,9 @@ const FORBIDDEN_ACTIONS = ["delete account", "send payment", "publish secret", "
 const REDACT_KEYS = ["token", "secret", "password", "apiKey", "authorization"];
 
 export function createBrief(proposal, options = {}) {
+  const forbiddenActions = [...FORBIDDEN_ACTIONS, ...loadPolicy(options.policy).forbiddenActions];
   const errors = validateProposal(proposal);
-  const risk = classifyRisk(proposal);
+  const risk = classifyRisk(proposal, forbiddenActions);
   const payloadPreview = redactAndTruncate(proposal.payload ?? proposal.payloadSummary, options);
   const brief = {
     status: risk === "forbidden" ? "blocked" : "approval-ready",
@@ -49,12 +50,18 @@ export function validateProposal(proposal) {
   return errors;
 }
 
-export function classifyRisk(proposal) {
+export function classifyRisk(proposal, forbiddenActions = FORBIDDEN_ACTIONS) {
   const haystack = `${proposal.action ?? ""} ${proposal.impact ?? ""}`.toLowerCase();
-  if (FORBIDDEN_ACTIONS.some((phrase) => haystack.includes(phrase))) return "forbidden";
+  if (forbiddenActions.some((phrase) => haystack.includes(String(phrase).toLowerCase()))) return "forbidden";
   if (proposal.mode === "read" || haystack.includes("read-only")) return "read-only";
   if (proposal.mode === "draft" || haystack.includes("draft-only")) return "draft-only";
   return "write-after-approval";
+}
+
+function loadPolicy(policyPath) {
+  if (!policyPath) return { forbiddenActions: [] };
+  const parsed = JSON.parse(fs.readFileSync(path.resolve(policyPath), "utf8"));
+  return { forbiddenActions: parsed.forbiddenActions ?? [] };
 }
 
 function isVagueApproval(text) {

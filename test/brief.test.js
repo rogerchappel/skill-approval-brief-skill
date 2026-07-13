@@ -39,6 +39,10 @@ test("blocks forbidden actions", () => {
   assert.throws(() => createBrief({ ...valid, action: "delete account" }), /Forbidden action/);
 });
 
+test("blocks policy-defined forbidden actions", () => {
+  assert.throws(() => createBrief({ ...valid, action: "bulk invite users" }, { policy: "fixtures/policy.json" }), /Forbidden action/);
+});
+
 test("truncates payload preview", () => {
   const brief = createBrief({ ...valid, payload: { body: "x".repeat(80) } }, { maxPayloadChars: 40 });
   assert.match(brief.payloadPreview, /truncated/);

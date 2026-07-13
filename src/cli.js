@@ -30,6 +30,7 @@ export function parseArgs(argv) {
     else if (arg === "--format") options.format = readValue(argv, ++index, "--format");
     else if (arg === "--output") options.output = readValue(argv, ++index, "--output");
     else if (arg === "--evidence") options.evidence.push(readValue(argv, ++index, "--evidence"));
+    else if (arg === "--policy") options.policy = readValue(argv, ++index, "--policy");
     else if (arg === "--max-payload-chars") options.maxPayloadChars = readValue(argv, ++index, "--max-payload-chars");
     else if (arg === "--redact-key") options.redactKeys = [...(options.redactKeys ?? []), readValue(argv, ++index, "--redact-key")];
     else if (arg.startsWith("--")) throw new Error(`Unknown option: ${arg}`);

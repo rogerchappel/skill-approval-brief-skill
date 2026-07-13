@@ -31,8 +31,17 @@ skill-approval-brief proposal.json \
   --evidence evidence.md \
   --format json|markdown \
   --output approval.md \
+  --policy policy.json \
   --max-payload-chars 500 \
   --redact-key customerEmail
+```
+
+Policy files may add local forbidden phrases:
+
+```json
+{
+  "forbiddenActions": ["bulk invite users"]
+}
 ```
 
 ## Risk Levels

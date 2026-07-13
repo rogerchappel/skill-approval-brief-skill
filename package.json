@@ -30,5 +30,9 @@
     "SKILL.md",
     "README.md"
   ],
-  "devDependencies": {}
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rogerchappel/skill-approval-brief-skill.git"
+  }
 }

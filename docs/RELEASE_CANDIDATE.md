@@ -6,6 +6,7 @@
 - `npm run check`
 - `npm run build`
 - `npm run smoke`
+- `node ./bin/skill-approval-brief.js fixtures/write-action.json --policy fixtures/policy.json --format json`
 - `bash scripts/validate.sh`
 
 ## Classification

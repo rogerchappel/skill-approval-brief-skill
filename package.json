@@ -10,7 +10,8 @@
     "test": "node --test",
     "check": "node scripts/check.js",
     "build": "node scripts/build.js",
-    "smoke": "node ./bin/skill-approval-brief.js fixtures/write-action.json --evidence fixtures/evidence.md --format markdown"
+    "smoke": "node ./bin/skill-approval-brief.js fixtures/write-action.json --evidence fixtures/evidence.md --format markdown",
+    "package:smoke": "npm pack --dry-run"
   },
   "keywords": [
     "agents",
@@ -30,5 +31,9 @@
     "SKILL.md",
     "README.md"
   ],
-  "devDependencies": {}
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rogerchappel/skill-approval-brief-skill.git"
+  }
 }

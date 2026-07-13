@@ -53,7 +53,7 @@ export function classifyRisk(proposal) {
   const haystack = `${proposal.action ?? ""} ${proposal.impact ?? ""}`.toLowerCase();
   if (FORBIDDEN_ACTIONS.some((phrase) => haystack.includes(phrase))) return "forbidden";
   if (proposal.mode === "read" || haystack.includes("read-only")) return "read-only";
-  if (proposal.mode === "draft" || haystack.includes("draft")) return "draft-only";
+  if (proposal.mode === "draft" || haystack.includes("draft-only")) return "draft-only";
   return "write-after-approval";
 }
 

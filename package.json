@@ -1,0 +1,34 @@
+{
+  "name": "skill-approval-brief-skill",
+  "version": "0.1.0",
+  "description": "Local-first agent skill for turning proposed external actions into auditable approval briefs.",
+  "type": "module",
+  "bin": {
+    "skill-approval-brief": "./bin/skill-approval-brief.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "check": "node scripts/check.js",
+    "build": "node scripts/build.js",
+    "smoke": "node ./bin/skill-approval-brief.js fixtures/write-action.json --evidence fixtures/evidence.md --format markdown"
+  },
+  "keywords": [
+    "agents",
+    "skills",
+    "approval",
+    "dry-run",
+    "connectors"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin",
+    "src",
+    "docs",
+    "SKILL.md",
+    "README.md"
+  ],
+  "devDependencies": {}
+}

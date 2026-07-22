@@ -10,5 +10,5 @@
   },
   "impact": "Creates a reviewable PR branch. It does not merge, publish, or tag a release.",
   "rollback": "Close the PR and delete the branch if it is not useful.",
-  "approvalText": "Approve release agent to create a GitHub PR for skill-approval-brief-skill."
+  "approvalText": "Approve release agent to create release-candidate pull request on GitHub for skill-approval-brief-skill."
 }

@@ -11,7 +11,7 @@ const valid = {
   payload: { title: "Release candidate", token: "secret" },
   impact: "Creates a draft review surface; no merge or publish.",
   rollback: "Close the PR branch without merging.",
-  approvalText: "Approve release agent to create a GitHub PR for run artifact index."
+  approvalText: "Approve release agent to create release-candidate pull request on GitHub for run artifact index."
 };
 
 test("creates approval-ready brief for valid write action", () => {
@@ -29,6 +29,37 @@ test("reports missing required fields", () => {
 test("rejects vague approval text", () => {
   const errors = validateProposal({ ...valid, approvalText: "ok" });
   assert.ok(errors.some((error) => error.includes("approvalText")));
+});
+
+test("rejects approval text that omits the action or target", () => {
+  const unscopedErrors = validateProposal({
+    ...valid,
+    action: "delete repository",
+    approvalText: "This sentence is long enough but names neither action nor target"
+  });
+  const actionOnlyErrors = validateProposal({
+    ...valid,
+    action: "delete repository",
+    approvalText: "Approve the delete repository action."
+  });
+  const targetOnlyErrors = validateProposal({
+    ...valid,
+    action: "delete repository",
+    approvalText: "Approve this action on GitHub."
+  });
+  for (const errors of [unscopedErrors, actionOnlyErrors, targetOnlyErrors]) {
+    assert.ok(errors.includes("approvalText must name the action and target explicitly"));
+  }
+});
+
+test("accepts approval text with normalized action and target phrases", () => {
+  const errors = validateProposal({
+    ...valid,
+    targetSystem: "GitHub Cloud",
+    action: "create release-candidate pull request",
+    approvalText: "Approve: CREATE RELEASE CANDIDATE PULL REQUEST on GitHub Cloud."
+  });
+  assert.deepEqual(errors, []);
 });
 
 test("classifies read and draft modes", () => {

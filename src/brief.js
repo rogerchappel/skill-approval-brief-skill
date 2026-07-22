@@ -44,7 +44,7 @@ export function validateProposal(proposal) {
       errors.push(`missing ${field}`);
     }
   }
-  if (proposal.approvalText && isVagueApproval(proposal.approvalText)) {
+  if (proposal.approvalText && !isScopedApproval(proposal.approvalText, proposal.action, proposal.targetSystem)) {
     errors.push("approvalText must name the action and target explicitly");
   }
   return errors;
@@ -64,10 +64,21 @@ function loadPolicy(policyPath) {
   return { forbiddenActions: parsed.forbiddenActions ?? [] };
 }
 
-function isVagueApproval(text) {
-  const normalized = text.toLowerCase();
-  if (normalized.length < 24) return true;
-  return ["ok", "yes", "approve", "go ahead"].includes(normalized.trim());
+function isScopedApproval(text, action, targetSystem) {
+  if (!action || !targetSystem) return false;
+  const normalizedText = ` ${normalizePhrase(text)} `;
+  return [action, targetSystem].every((value) => {
+    const phrase = normalizePhrase(value);
+    return phrase && normalizedText.includes(` ${phrase} `);
+  });
+}
+
+function normalizePhrase(value) {
+  return String(value)
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
 }
 
 function redactAndTruncate(value, options) {

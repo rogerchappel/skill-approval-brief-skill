@@ -72,7 +72,9 @@ function isVagueApproval(text) {
 
 function redactAndTruncate(value, options) {
   const max = Number(options.maxPayloadChars ?? 500);
-  const redacted = redactValue(value, new Set([...(options.redactKeys ?? []), ...REDACT_KEYS]));
+  const redacted = redactValue(value, new Set(
+    [...(options.redactKeys ?? []), ...REDACT_KEYS].map(normalizeRedactKey)
+  ));
   const text = typeof redacted === "string" ? redacted : JSON.stringify(redacted, null, 2);
   return text.length > max ? `${text.slice(0, max)}... [truncated]` : text;
 }
@@ -82,10 +84,19 @@ function redactValue(value, keys) {
   if (value && typeof value === "object") {
     return Object.fromEntries(Object.entries(value).map(([key, child]) => [
       key,
-      keys.has(key) ? "[REDACTED]" : redactValue(child, keys)
+      isRedactedKey(key, keys) ? "[REDACTED]" : redactValue(child, keys)
     ]));
   }
   return value;
+}
+
+function normalizeRedactKey(key) {
+  return String(key).normalize("NFKC").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function isRedactedKey(key, redactKeys) {
+  const normalized = normalizeRedactKey(key);
+  return [...redactKeys].some((redactKey) => normalized === redactKey || normalized.endsWith(redactKey));
 }
 
 function loadEvidence(paths) {

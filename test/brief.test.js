@@ -21,6 +21,25 @@ test("creates approval-ready brief for valid write action", () => {
   assert.match(brief.payloadPreview, /REDACTED/);
 });
 
+test("redacts credential key variants recursively", () => {
+  const secrets = ["live-secret", "live-key", "capital-secret", "nested-secret"];
+  const brief = createBrief({
+    ...valid,
+    payload: {
+      accessToken: secrets[0],
+      api_key: secrets[1],
+      Token: secrets[2],
+      metadata: [{ user_password: secrets[3], label: "keep me" }],
+      tokenCount: 2
+    }
+  });
+
+  for (const secret of secrets) assert.doesNotMatch(brief.payloadPreview, new RegExp(secret));
+  assert.match(brief.payloadPreview, /"label": "keep me"/);
+  assert.match(brief.payloadPreview, /"tokenCount": 2/);
+  assert.equal(brief.payloadPreview.match(/\[REDACTED\]/g)?.length, secrets.length);
+});
+
 test("reports missing required fields", () => {
   const errors = validateProposal({ actor: "agent" });
   assert.ok(errors.includes("missing targetSystem"));

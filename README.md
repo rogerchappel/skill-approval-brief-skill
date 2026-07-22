@@ -20,7 +20,7 @@ node ./bin/skill-approval-brief.js fixtures/write-action.json --evidence fixture
   "payloadSummary": "Open a PR with verification notes.",
   "impact": "Creates a review branch; does not merge.",
   "rollback": "Close the PR and delete the branch.",
-  "approvalText": "Approve release agent to create a GitHub PR for this repo."
+  "approvalText": "Approve release agent to create release-candidate pull request on GitHub for this repo."
 }
 ```
 
@@ -55,5 +55,6 @@ Policy files may add local forbidden phrases:
 
 - Never calls external services.
 - Does not perform the proposed action.
+- Requires the complete action and target-system phrases in approval text after case folding and normalization of punctuation and whitespace. Partial words and abbreviations do not match.
 - Redacts common secret keys in payload previews.
 - Returns non-zero for forbidden actions and invalid proposals.

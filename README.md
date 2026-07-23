@@ -36,7 +36,10 @@ skill-approval-brief proposal.json \
   --redact-key customerEmail
 ```
 
-Policy files may add local forbidden phrases:
+Policy files may add local forbidden phrases. `forbiddenActions`, when present, must
+be an array of non-empty strings; other value types and blank entries are rejected
+before the proposal is classified. The complete schema is in
+[`docs/POLICY_SCHEMA.json`](docs/POLICY_SCHEMA.json).
 
 ```json
 {

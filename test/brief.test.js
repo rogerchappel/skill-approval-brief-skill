@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 import { classifyRisk, createBrief, validateProposal } from "../src/brief.js";
 
@@ -92,6 +95,57 @@ test("blocks forbidden actions", () => {
 
 test("blocks policy-defined forbidden actions", () => {
   assert.throws(() => createBrief({ ...valid, action: "bulk invite users" }, { policy: "fixtures/policy.json" }), /Forbidden action/);
+});
+
+test("rejects malformed forbiddenActions policy values", () => {
+  const malformedValues = [
+    "bulk invite users",
+    42,
+    null,
+    { phrase: "bulk invite users" },
+    [null],
+    [""],
+    ["   "],
+    ["bulk invite users", 42]
+  ];
+
+  for (const forbiddenActions of malformedValues) {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), "approval-policy-"));
+    const policy = path.join(directory, "policy.json");
+    fs.writeFileSync(policy, JSON.stringify({ forbiddenActions }));
+    assert.throws(
+      () => createBrief(valid, { policy }),
+      { name: "TypeError", message: "Policy forbiddenActions must be an array of non-empty strings." }
+    );
+  }
+});
+
+test("malformed policy strings cannot falsely block unrelated actions", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "approval-policy-"));
+  const policy = path.join(directory, "policy.json");
+  fs.writeFileSync(policy, JSON.stringify({ forbiddenActions: "bulk invite users" }));
+
+  assert.throws(
+    () => createBrief({ ...valid, action: "create report" }, { policy }),
+    /Policy forbiddenActions must be an array of non-empty strings/
+  );
+});
+
+test("CLI reports malformed forbiddenActions policies without a blocked-action result", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "approval-policy-"));
+  const policy = path.join(directory, "policy.json");
+  fs.writeFileSync(policy, JSON.stringify({ forbiddenActions: "bulk invite users" }));
+
+  const result = spawnSync(
+    process.execPath,
+    ["./bin/skill-approval-brief.js", "fixtures/write-action.json", "--policy", policy],
+    { cwd: process.cwd(), encoding: "utf8" }
+  );
+
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, "");
+  assert.match(result.stderr, /Policy forbiddenActions must be an array of non-empty strings/);
+  assert.doesNotMatch(result.stderr, /Forbidden action requires redesign/);
 });
 
 test("truncates payload preview", () => {

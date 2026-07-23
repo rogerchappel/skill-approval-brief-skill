@@ -61,7 +61,18 @@ export function classifyRisk(proposal, forbiddenActions = FORBIDDEN_ACTIONS) {
 function loadPolicy(policyPath) {
   if (!policyPath) return { forbiddenActions: [] };
   const parsed = JSON.parse(fs.readFileSync(path.resolve(policyPath), "utf8"));
-  return { forbiddenActions: parsed.forbiddenActions ?? [] };
+  const forbiddenActions = parsed?.forbiddenActions;
+  if (
+    forbiddenActions === undefined
+    || !Array.isArray(forbiddenActions)
+    || forbiddenActions.some((phrase) => typeof phrase !== "string" || phrase.trim() === "")
+  ) {
+    if (forbiddenActions === undefined && parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return { forbiddenActions: [] };
+    }
+    throw new TypeError("Policy forbiddenActions must be an array of non-empty strings.");
+  }
+  return { forbiddenActions };
 }
 
 function isScopedApproval(text, action, targetSystem) {

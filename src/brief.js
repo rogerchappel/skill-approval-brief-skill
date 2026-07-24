@@ -13,12 +13,12 @@ export function createBrief(proposal, options = {}) {
   const brief = {
     status: risk === "forbidden" ? "blocked" : "approval-ready",
     risk,
-    actor: proposal.actor,
-    targetSystem: proposal.targetSystem,
-    action: proposal.action,
-    impact: proposal.impact,
-    rollback: proposal.rollback,
-    approvalText: proposal.approvalText,
+    actor: stringValue(proposal.actor),
+    targetSystem: stringValue(proposal.targetSystem),
+    action: stringValue(proposal.action),
+    impact: stringValue(proposal.impact),
+    rollback: stringValue(proposal.rollback),
+    approvalText: stringValue(proposal.approvalText),
     payloadPreview,
     evidence: loadEvidence(options.evidence ?? []),
     errors
@@ -97,8 +97,14 @@ function redactAndTruncate(value, options) {
   const redacted = redactValue(value, new Set(
     [...(options.redactKeys ?? []), ...REDACT_KEYS].map(normalizeRedactKey)
   ));
-  const text = typeof redacted === "string" ? redacted : JSON.stringify(redacted, null, 2);
+  const text = redacted === undefined
+    ? ""
+    : typeof redacted === "string" ? redacted : JSON.stringify(redacted, null, 2);
   return text.length > max ? `${text.slice(0, max)}... [truncated]` : text;
+}
+
+function stringValue(value) {
+  return value === undefined || value === null ? "" : String(value);
 }
 
 function redactValue(value, keys) {

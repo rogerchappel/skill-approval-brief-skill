@@ -17,6 +17,17 @@ const valid = {
   approvalText: "Approve release agent to create release-candidate pull request on GitHub for run artifact index."
 };
 
+function runCli(args, input) {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "approval-cli-"));
+  const proposal = path.join(directory, "proposal.json");
+  if (input !== undefined) fs.writeFileSync(proposal, JSON.stringify(input));
+  return spawnSync(
+    process.execPath,
+    ["./bin/skill-approval-brief.js", ...(input === undefined ? [] : [proposal]), ...args],
+    { cwd: process.cwd(), encoding: "utf8" }
+  );
+}
+
 test("creates approval-ready brief for valid write action", () => {
   const brief = createBrief(valid);
   assert.equal(brief.status, "approval-ready");
@@ -46,6 +57,58 @@ test("redacts credential key variants recursively", () => {
 test("reports missing required fields", () => {
   const errors = validateProposal({ actor: "agent" });
   assert.ok(errors.includes("missing targetSystem"));
+});
+
+test("CLI emits a structured JSON brief for an incomplete proposal", () => {
+  const result = runCli(["--format", "json"], { actor: "agent" });
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Invalid approval proposal/);
+  const brief = JSON.parse(result.stdout);
+  assert.equal(brief.actor, "agent");
+  assert.equal(brief.payloadPreview, "");
+  assert.ok(brief.errors.includes("missing payloadSummary"));
+  for (const field of ["targetSystem", "action", "impact", "rollback", "approvalText"]) {
+    assert.equal(brief[field], "");
+  }
+});
+
+test("CLI markdown exposes validation errors for an incomplete proposal", () => {
+  const result = runCli(["--format", "markdown"], { actor: "agent" });
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /## Validation Errors/);
+  assert.match(result.stdout, /- missing payloadSummary/);
+  assert.doesNotMatch(result.stderr, /Cannot read properties/);
+});
+
+test("CLI validates max payload characters as a positive integer", () => {
+  for (const value of ["nope", "0", "-1", "1.5"]) {
+    const result = runCli(["--max-payload-chars", value], valid);
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, "");
+    assert.match(result.stderr, /--max-payload-chars must be a positive integer/);
+  }
+
+  const result = runCli(["--max-payload-chars", "40"], valid);
+  assert.equal(result.status, 0);
+  assert.match(JSON.parse(result.stdout).payloadPreview, /truncated/);
+});
+
+test("CLI rejects extra proposal paths", () => {
+  const result = runCli(["fixtures/blocked-action.json"], valid);
+
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, "");
+  assert.match(result.stderr, /Only one input proposal JSON may be provided/);
+});
+
+test("CLI value-taking options reject missing values consistently", () => {
+  for (const option of ["--format", "--output", "--evidence", "--policy", "--max-payload-chars", "--redact-key"]) {
+    const result = runCli([option], valid);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, new RegExp(`${option} requires a value`));
+  }
 });
 
 test("rejects vague approval text", () => {

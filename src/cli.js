@@ -46,7 +46,7 @@ export function parseArgs(argv) {
 }
 
 function readValue(argv, index, name) {
-  if (!argv[index]) throw new Error(`${name} requires a value`);
+  if (!argv[index] || argv[index].startsWith("--")) throw new Error(`${name} requires a value`);
   return argv[index];
 }
 

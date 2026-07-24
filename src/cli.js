@@ -34,15 +34,19 @@ export function parseArgs(argv) {
     else if (arg === "--max-payload-chars") options.maxPayloadChars = readValue(argv, ++index, "--max-payload-chars");
     else if (arg === "--redact-key") options.redactKeys = [...(options.redactKeys ?? []), readValue(argv, ++index, "--redact-key")];
     else if (arg.startsWith("--")) throw new Error(`Unknown option: ${arg}`);
+    else if (options.input) throw new Error("Only one input proposal JSON may be provided");
     else options.input = arg;
   }
   if (!options.help && !options.input) throw new Error("input proposal JSON is required");
   if (!["json", "markdown"].includes(options.format)) throw new Error("--format must be json or markdown");
+  if (options.maxPayloadChars !== undefined && !/^[1-9]\d*$/.test(options.maxPayloadChars)) {
+    throw new Error("--max-payload-chars must be a positive integer");
+  }
   return options;
 }
 
 function readValue(argv, index, name) {
-  if (!argv[index]) throw new Error(`${name} requires a value`);
+  if (!argv[index] || argv[index].startsWith("--")) throw new Error(`${name} requires a value`);
   return argv[index];
 }
 
@@ -52,5 +56,17 @@ function writeOutput(output, outputPath) {
 }
 
 function helpText() {
-  return `skill-approval-brief proposal.json [--evidence file] [--format json|markdown]\n\nCreates an approval brief without performing the proposed action.\n`;
+  return `skill-approval-brief proposal.json [options]
+
+Creates an approval brief without performing the proposed action.
+
+Options:
+  --evidence file             Include an evidence file (repeatable)
+  --format json|markdown      Select output format (default: json)
+  --output file               Write the brief to a file
+  --policy file               Load a forbidden-action policy
+  --max-payload-chars integer Set a positive payload preview limit (default: 500)
+  --redact-key key            Redact an additional payload key (repeatable)
+  --help, -h                  Show this help
+`;
 }

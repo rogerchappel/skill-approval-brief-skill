@@ -39,5 +39,10 @@ export function renderMarkdown(brief) {
     }
   }
 
+  if (brief.errors.length > 0) {
+    lines.push("", "## Validation Errors", "");
+    for (const error of brief.errors) lines.push(`- ${error}`);
+  }
+
   return `${lines.join("\n")}\n`;
 }

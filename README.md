@@ -36,6 +36,10 @@ skill-approval-brief proposal.json \
   --redact-key customerEmail
 ```
 
+Exactly one proposal path is accepted. `--max-payload-chars` must be a positive
+integer; all value-taking options fail with an actionable error when their
+value is absent.
+
 Policy files may add local forbidden phrases. `forbiddenActions`, when present, must
 be an array of non-empty strings; other value types and blank entries are rejected
 before the proposal is classified. The complete schema is in
@@ -60,4 +64,8 @@ before the proposal is classified. The complete schema is in
 - Does not perform the proposed action.
 - Requires the complete action and target-system phrases in approval text after case folding and normalization of punctuation and whitespace. Partial words and abbreviations do not match.
 - Redacts common secret keys in payload previews.
-- Returns non-zero for forbidden actions and invalid proposals.
+- Invalid proposals emit a schema-backed brief in the selected format, including
+  an `errors` array in JSON or a **Validation Errors** section in Markdown, and
+  exit 1.
+- Forbidden actions emit a blocked brief and retain their distinct exit 2
+  status.

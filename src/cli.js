@@ -56,5 +56,17 @@ function writeOutput(output, outputPath) {
 }
 
 function helpText() {
-  return `skill-approval-brief proposal.json [--evidence file] [--format json|markdown]\n\nCreates an approval brief without performing the proposed action.\n`;
+  return `skill-approval-brief proposal.json [options]
+
+Creates an approval brief without performing the proposed action.
+
+Options:
+  --evidence file             Include an evidence file (repeatable)
+  --format json|markdown      Select output format (default: json)
+  --output file               Write the brief to a file
+  --policy file               Load a forbidden-action policy
+  --max-payload-chars integer Set a positive payload preview limit (default: 500)
+  --redact-key key            Redact an additional payload key (repeatable)
+  --help, -h                  Show this help
+`;
 }

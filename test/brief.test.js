@@ -108,6 +108,10 @@ test("CLI value-taking options reject missing values consistently", () => {
     const result = runCli([option], valid);
     assert.equal(result.status, 1);
     assert.match(result.stderr, new RegExp(`${option} requires a value`));
+
+    const followedByOption = runCli([option, "--help"], valid);
+    assert.equal(followedByOption.status, 1);
+    assert.match(followedByOption.stderr, new RegExp(`${option} requires a value`));
   }
 });
 

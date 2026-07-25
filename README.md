@@ -42,7 +42,8 @@ value is absent.
 
 Policy files may add local forbidden phrases. `forbiddenActions`, when present, must
 be an array of non-empty strings; other value types and blank entries are rejected
-before the proposal is classified. The complete schema is in
+before the proposal is classified. Policy roots must be objects and unknown
+properties are rejected. The complete schema is in
 [`docs/POLICY_SCHEMA.json`](docs/POLICY_SCHEMA.json).
 
 ```json
@@ -64,8 +65,9 @@ before the proposal is classified. The complete schema is in
 - Does not perform the proposed action.
 - Requires the complete action and target-system phrases in approval text after case folding and normalization of punctuation and whitespace. Partial words and abbreviations do not match.
 - Redacts common secret keys in payload previews.
-- Invalid proposals emit a schema-backed brief in the selected format, including
-  an `errors` array in JSON or a **Validation Errors** section in Markdown, and
-  exit 1.
+- Invalid proposals emit an `invalid` / `unclassified` schema-backed brief in the
+  selected format, including an `errors` array in JSON or a **Validation Errors**
+  section in Markdown, and exit 1. Required proposal fields must be non-empty
+  strings, and `mode`, when present, must be `read`, `draft`, or `write`.
 - Forbidden actions emit a blocked brief and retain their distinct exit 2
   status.

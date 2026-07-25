@@ -8,17 +8,18 @@ const REDACT_KEYS = ["token", "secret", "password", "apiKey", "authorization"];
 export function createBrief(proposal, options = {}) {
   const forbiddenActions = [...FORBIDDEN_ACTIONS, ...loadPolicy(options.policy).forbiddenActions];
   const errors = validateProposal(proposal);
-  const risk = classifyRisk(proposal, forbiddenActions);
-  const payloadPreview = redactAndTruncate(proposal.payload ?? proposal.payloadSummary, options);
+  const validRoot = isPlainObject(proposal);
+  const risk = errors.length > 0 ? "unclassified" : classifyRisk(proposal, forbiddenActions);
+  const payloadPreview = redactAndTruncate(validRoot ? proposal.payload ?? proposal.payloadSummary : undefined, options);
   const brief = {
-    status: risk === "forbidden" ? "blocked" : "approval-ready",
+    status: errors.length > 0 ? "invalid" : risk === "forbidden" ? "blocked" : "approval-ready",
     risk,
-    actor: stringValue(proposal.actor),
-    targetSystem: stringValue(proposal.targetSystem),
-    action: stringValue(proposal.action),
-    impact: stringValue(proposal.impact),
-    rollback: stringValue(proposal.rollback),
-    approvalText: stringValue(proposal.approvalText),
+    actor: validRoot && typeof proposal.actor === "string" ? proposal.actor : "",
+    targetSystem: validRoot && typeof proposal.targetSystem === "string" ? proposal.targetSystem : "",
+    action: validRoot && typeof proposal.action === "string" ? proposal.action : "",
+    impact: validRoot && typeof proposal.impact === "string" ? proposal.impact : "",
+    rollback: validRoot && typeof proposal.rollback === "string" ? proposal.rollback : "",
+    approvalText: validRoot && typeof proposal.approvalText === "string" ? proposal.approvalText : "",
     payloadPreview,
     evidence: loadEvidence(options.evidence ?? []),
     errors
@@ -38,13 +39,22 @@ export function createBrief(proposal, options = {}) {
 }
 
 export function validateProposal(proposal) {
+  if (!isPlainObject(proposal)) return ["proposal must be an object"];
+
   const errors = [];
   for (const field of REQUIRED_FIELDS) {
-    if (!proposal[field] || String(proposal[field]).trim() === "") {
-      errors.push(`missing ${field}`);
+    if (typeof proposal[field] !== "string" || proposal[field].trim() === "") {
+      errors.push(`${field} must be a non-empty string`);
     }
   }
-  if (proposal.approvalText && !isScopedApproval(proposal.approvalText, proposal.action, proposal.targetSystem)) {
+  if (proposal.mode !== undefined && !["read", "draft", "write"].includes(proposal.mode)) {
+    errors.push("mode must be one of: read, draft, write");
+  }
+  if (
+    typeof proposal.approvalText === "string"
+    && proposal.approvalText.trim() !== ""
+    && !isScopedApproval(proposal.approvalText, proposal.action, proposal.targetSystem)
+  ) {
     errors.push("approvalText must name the action and target explicitly");
   }
   return errors;
@@ -61,13 +71,20 @@ export function classifyRisk(proposal, forbiddenActions = FORBIDDEN_ACTIONS) {
 function loadPolicy(policyPath) {
   if (!policyPath) return { forbiddenActions: [] };
   const parsed = JSON.parse(fs.readFileSync(path.resolve(policyPath), "utf8"));
-  const forbiddenActions = parsed?.forbiddenActions;
+  if (!isPlainObject(parsed)) {
+    throw new TypeError("Policy must be an object.");
+  }
+  const unexpected = Object.keys(parsed).filter((key) => key !== "forbiddenActions").sort();
+  if (unexpected.length > 0) {
+    throw new TypeError(`Policy contains unexpected properties: ${unexpected.join(", ")}.`);
+  }
+  const forbiddenActions = parsed.forbiddenActions;
   if (
     forbiddenActions === undefined
     || !Array.isArray(forbiddenActions)
     || forbiddenActions.some((phrase) => typeof phrase !== "string" || phrase.trim() === "")
   ) {
-    if (forbiddenActions === undefined && parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+    if (forbiddenActions === undefined) {
       return { forbiddenActions: [] };
     }
     throw new TypeError("Policy forbiddenActions must be an array of non-empty strings.");
@@ -103,8 +120,8 @@ function redactAndTruncate(value, options) {
   return text.length > max ? `${text.slice(0, max)}... [truncated]` : text;
 }
 
-function stringValue(value) {
-  return value === undefined || value === null ? "" : String(value);
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 function redactValue(value, keys) {

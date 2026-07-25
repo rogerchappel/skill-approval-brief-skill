@@ -4,14 +4,14 @@
   "type": "object",
   "required": ["actor", "targetSystem", "action", "payloadSummary", "impact", "rollback", "approvalText"],
   "properties": {
-    "actor": { "type": "string" },
-    "targetSystem": { "type": "string" },
-    "action": { "type": "string" },
+    "actor": { "type": "string", "minLength": 1, "pattern": "\\S" },
+    "targetSystem": { "type": "string", "minLength": 1, "pattern": "\\S" },
+    "action": { "type": "string", "minLength": 1, "pattern": "\\S" },
     "mode": { "enum": ["read", "draft", "write"] },
-    "payloadSummary": { "type": "string" },
+    "payloadSummary": { "type": "string", "minLength": 1, "pattern": "\\S" },
     "payload": {},
-    "impact": { "type": "string" },
-    "rollback": { "type": "string" },
-    "approvalText": { "type": "string" }
+    "impact": { "type": "string", "minLength": 1, "pattern": "\\S" },
+    "rollback": { "type": "string", "minLength": 1, "pattern": "\\S" },
+    "approvalText": { "type": "string", "minLength": 1, "pattern": "\\S" }
   }
 }

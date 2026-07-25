@@ -4,8 +4,8 @@
   "type": "object",
   "required": ["status", "risk", "actor", "targetSystem", "action", "impact", "rollback", "approvalText", "payloadPreview", "evidence", "errors"],
   "properties": {
-    "status": { "enum": ["approval-ready", "blocked"] },
-    "risk": { "enum": ["read-only", "draft-only", "write-after-approval", "forbidden"] },
+    "status": { "enum": ["approval-ready", "blocked", "invalid"] },
+    "risk": { "enum": ["read-only", "draft-only", "write-after-approval", "forbidden", "unclassified"] },
     "actor": { "type": "string" },
     "targetSystem": { "type": "string" },
     "action": { "type": "string" },

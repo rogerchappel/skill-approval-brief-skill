@@ -59,6 +59,14 @@ properties are rejected. The complete schema is in
 - `write-after-approval`: may write externally after explicit approval.
 - `forbidden`: too destructive or sensitive for approval prompting.
 
+`mode` is a classification hint, not an override for `action` and `impact`.
+Classification uses conservative precedence: forbidden actions remain `forbidden`,
+then write semantics (including `mode: "write"`) become `write-after-approval`,
+then consistent draft and read descriptions become `draft-only` or `read-only`.
+For example, `mode: "read"` combined with `action: "create issue"` is classified
+as `write-after-approval`. Keep all three fields consistent so reviewers see an
+unambiguous boundary.
+
 ## Safety Notes
 
 - Never calls external services.
@@ -68,6 +76,8 @@ properties are rejected. The complete schema is in
 - Invalid proposals emit an `invalid` / `unclassified` schema-backed brief in the
   selected format, including an `errors` array in JSON or a **Validation Errors**
   section in Markdown, and exit 1. Required proposal fields must be non-empty
-  strings, and `mode`, when present, must be `read`, `draft`, or `write`.
+  strings, and `mode`, when present, must be `read`, `draft`, or `write`. A
+  schema-valid mode that contradicts write semantics is conservatively elevated
+  rather than trusted.
 - Forbidden actions emit a blocked brief and retain their distinct exit 2
   status.

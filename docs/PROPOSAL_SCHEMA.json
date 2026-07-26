@@ -7,7 +7,10 @@
     "actor": { "type": "string", "minLength": 1, "pattern": "\\S" },
     "targetSystem": { "type": "string", "minLength": 1, "pattern": "\\S" },
     "action": { "type": "string", "minLength": 1, "pattern": "\\S" },
-    "mode": { "enum": ["read", "draft", "write"] },
+    "mode": {
+      "description": "Classification hint. Write semantics in action or impact take precedence over read or draft; write always selects write-after-approval.",
+      "enum": ["read", "draft", "write"]
+    },
     "payloadSummary": { "type": "string", "minLength": 1, "pattern": "\\S" },
     "payload": {},
     "impact": { "type": "string", "minLength": 1, "pattern": "\\S" },

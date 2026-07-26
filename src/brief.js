@@ -4,6 +4,7 @@ import path from "node:path";
 const REQUIRED_FIELDS = ["actor", "targetSystem", "action", "payloadSummary", "impact", "rollback", "approvalText"];
 const FORBIDDEN_ACTIONS = ["delete account", "send payment", "publish secret", "disable security"];
 const REDACT_KEYS = ["token", "secret", "password", "apiKey", "authorization"];
+const WRITE_VERBS = /\b(?:creat(?:e|es|ed|ing)|updat(?:e|es|ed|ing)|edit(?:s|ed|ing)?|delet(?:e|es|ed|ing)|send(?:s|ing)?|sent|publish(?:es|ed|ing)?|post(?:s|ed|ing)?|upload(?:s|ed|ing)?|modif(?:y|ies|ied|ying)|merg(?:e|es|ed|ing)|writ(?:e|es|ten|ing))\b/i;
 
 export function createBrief(proposal, options = {}) {
   const forbiddenActions = [...FORBIDDEN_ACTIONS, ...loadPolicy(options.policy).forbiddenActions];
@@ -63,9 +64,17 @@ export function validateProposal(proposal) {
 export function classifyRisk(proposal, forbiddenActions = FORBIDDEN_ACTIONS) {
   const haystack = `${proposal.action ?? ""} ${proposal.impact ?? ""}`.toLowerCase();
   if (forbiddenActions.some((phrase) => haystack.includes(String(phrase).toLowerCase()))) return "forbidden";
+  if (proposal.mode === "write" || describesWrite(proposal)) return "write-after-approval";
   if (proposal.mode === "read" || haystack.includes("read-only")) return "read-only";
   if (proposal.mode === "draft" || haystack.includes("draft-only")) return "draft-only";
   return "write-after-approval";
+}
+
+function describesWrite(proposal) {
+  const description = `${proposal.action ?? ""} ${proposal.impact ?? ""}`
+    .replace(/\bno external writes?\b/gi, "")
+    .replace(/\bnothing is (?:published|posted|uploaded|updated|created|written)\b/gi, "");
+  return /\bwrite-after-approval\b/i.test(description) || WRITE_VERBS.test(description);
 }
 
 function loadPolicy(policyPath) {

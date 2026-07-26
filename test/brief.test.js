@@ -198,9 +198,92 @@ test("CLI emits structured invalid output for schema-invalid proposals", () => {
   }
 });
 
-test("classifies read and draft modes", () => {
-  assert.equal(classifyRisk({ ...valid, mode: "read" }), "read-only");
-  assert.equal(classifyRisk({ ...valid, mode: "draft" }), "draft-only");
+test("classifies consistent read and draft modes", () => {
+  assert.equal(classifyRisk({
+    ...valid,
+    action: "inspect repository settings",
+    impact: "Read-only inspection with no external write.",
+    mode: "read"
+  }), "read-only");
+  assert.equal(classifyRisk({
+    ...valid,
+    action: "prepare a local release plan",
+    impact: "Draft-only local plan; nothing is published.",
+    mode: "draft"
+  }), "draft-only");
+});
+
+test("conservatively elevates read and draft modes that describe writes", () => {
+  for (const mode of ["read", "draft"]) {
+    assert.equal(classifyRisk({
+      ...valid,
+      action: "create issue",
+      impact: "Creates a public GitHub issue.",
+      mode
+    }), "write-after-approval");
+  }
+});
+
+test("write descriptions take precedence over read-only and draft-only descriptions", () => {
+  assert.equal(classifyRisk({
+    ...valid,
+    action: "publish the release notes",
+    impact: "Described as read-only, but publishes changes externally.",
+    mode: "read"
+  }), "write-after-approval");
+  assert.equal(classifyRisk({
+    ...valid,
+    action: "update the pull request",
+    impact: "Starts from a draft-only plan, then updates GitHub.",
+    mode: "draft"
+  }), "write-after-approval");
+  assert.equal(classifyRisk({
+    ...valid,
+    action: "inspect repository settings",
+    impact: "Read-only inspection with no external write.",
+    mode: "write"
+  }), "write-after-approval");
+});
+
+test("CLI elevates a conflicting read-mode proposal to write-after-approval", () => {
+  const proposal = {
+    ...valid,
+    action: "create issue",
+    impact: "Creates a public GitHub issue.",
+    approvalText: "Approve release agent to create issue on GitHub.",
+    mode: "read"
+  };
+  const result = runCli(["--format", "json"], proposal);
+
+  assert.equal(result.status, 0);
+  assert.equal(JSON.parse(result.stdout).risk, "write-after-approval");
+});
+
+test("CLI preserves valid read-only and draft-only proposals", () => {
+  const proposals = [
+    {
+      ...valid,
+      action: "inspect repository settings",
+      impact: "Read-only inspection with no external write.",
+      approvalText: "Approve release agent to inspect repository settings on GitHub.",
+      mode: "read",
+      expectedRisk: "read-only"
+    },
+    {
+      ...valid,
+      action: "prepare a local release plan",
+      impact: "Draft-only local plan; nothing is published.",
+      approvalText: "Approve release agent to prepare a local release plan on GitHub.",
+      mode: "draft",
+      expectedRisk: "draft-only"
+    }
+  ];
+
+  for (const { expectedRisk, ...proposal } of proposals) {
+    const result = runCli(["--format", "json"], proposal);
+    assert.equal(result.status, 0);
+    assert.equal(JSON.parse(result.stdout).risk, expectedRisk);
+  }
 });
 
 test("blocks forbidden actions", () => {

@@ -294,12 +294,47 @@ test("blocks forbidden actions", () => {
   }), /Forbidden action/);
 });
 
+test("matches built-in forbidden actions on normalized token boundaries", () => {
+  assert.equal(classifyRisk({
+    ...valid,
+    action: "DELETE—ACCOUNT",
+    impact: "Permanently removes the account."
+  }), "forbidden");
+  assert.equal(classifyRisk({
+    ...valid,
+    action: "send payment",
+    impact: "Transfers funds to the recipient."
+  }), "forbidden");
+  assert.equal(classifyRisk({
+    ...valid,
+    action: "delete accountancy notes",
+    impact: "Removes internal accounting notes."
+  }), "write-after-approval");
+});
+
 test("blocks policy-defined forbidden actions", () => {
   assert.throws(() => createBrief({
     ...valid,
     action: "bulk invite users",
     approvalText: "Approve release agent to bulk invite users on GitHub."
   }, { policy: "fixtures/policy.json" }), /Forbidden action/);
+});
+
+test("matches policy-defined forbidden actions on normalized token boundaries", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "approval-policy-"));
+  const policy = path.join(directory, "policy.json");
+  fs.writeFileSync(policy, JSON.stringify({ forbiddenActions: ["bulk invite"] }));
+
+  assert.throws(() => createBrief({
+    ...valid,
+    action: "bulk-invite users",
+    approvalText: "Approve release agent to bulk invite users on GitHub."
+  }, { policy }), /Forbidden action/);
+  assert.doesNotThrow(() => createBrief({
+    ...valid,
+    action: "update bulk invitees list",
+    approvalText: "Approve release agent to update bulk invitees list on GitHub."
+  }, { policy }));
 });
 
 test("rejects malformed forbiddenActions policy values", () => {

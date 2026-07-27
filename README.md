@@ -45,6 +45,9 @@ be an array of non-empty strings; other value types and blank entries are reject
 before the proposal is classified. Policy roots must be objects and unknown
 properties are rejected. The complete schema is in
 [`docs/POLICY_SCHEMA.json`](docs/POLICY_SCHEMA.json).
+Forbidden phrases are case-insensitive and punctuation-insensitive, and match only
+at normalized token boundaries. For example, `delete account` matches
+`DELETE—ACCOUNT`, but does not match `delete accountancy notes`.
 
 ```json
 {

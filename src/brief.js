@@ -62,11 +62,11 @@ export function validateProposal(proposal) {
 }
 
 export function classifyRisk(proposal, forbiddenActions = FORBIDDEN_ACTIONS) {
-  const haystack = `${proposal.action ?? ""} ${proposal.impact ?? ""}`.toLowerCase();
-  if (forbiddenActions.some((phrase) => haystack.includes(String(phrase).toLowerCase()))) return "forbidden";
+  const haystack = `${proposal.action ?? ""} ${proposal.impact ?? ""}`;
+  if (forbiddenActions.some((phrase) => containsNormalizedPhrase(haystack, phrase))) return "forbidden";
   if (proposal.mode === "write" || describesWrite(proposal)) return "write-after-approval";
-  if (proposal.mode === "read" || haystack.includes("read-only")) return "read-only";
-  if (proposal.mode === "draft" || haystack.includes("draft-only")) return "draft-only";
+  if (proposal.mode === "read" || haystack.toLowerCase().includes("read-only")) return "read-only";
+  if (proposal.mode === "draft" || haystack.toLowerCase().includes("draft-only")) return "draft-only";
   return "write-after-approval";
 }
 
@@ -116,6 +116,12 @@ function normalizePhrase(value) {
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim();
+}
+
+function containsNormalizedPhrase(value, phrase) {
+  const normalizedPhrase = normalizePhrase(phrase);
+  if (!normalizedPhrase) return false;
+  return ` ${normalizePhrase(value)} `.includes(` ${normalizedPhrase} `);
 }
 
 function redactAndTruncate(value, options) {

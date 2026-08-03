@@ -224,6 +224,43 @@ test("conservatively elevates read and draft modes that describe writes", () => 
   }
 });
 
+test("classifies common GitHub mutations as writes despite a read mode hint", () => {
+  const writeActions = [
+    "close pull request",
+    "closes pull request",
+    "closed pull request",
+    "closing pull request",
+    "rename repository",
+    "renames repository",
+    "renamed repository",
+    "renaming repository",
+    "invite collaborator",
+    "invites collaborator",
+    "invited collaborator",
+    "inviting collaborator"
+  ];
+
+  for (const action of writeActions) {
+    assert.equal(classifyRisk({
+      ...valid,
+      action,
+      impact: "Changes GitHub state.",
+      mode: "read"
+    }), "write-after-approval", action);
+  }
+});
+
+test("does not elevate read-only words that merely contain write verb prefixes", () => {
+  for (const action of ["inspect closed pull requests", "review repository renames", "list invited collaborators"]) {
+    assert.equal(classifyRisk({
+      ...valid,
+      action,
+      impact: "Read-only inspection with no external write.",
+      mode: "read"
+    }), "read-only", action);
+  }
+});
+
 test("write descriptions take precedence over read-only and draft-only descriptions", () => {
   assert.equal(classifyRisk({
     ...valid,
@@ -257,6 +294,22 @@ test("CLI elevates a conflicting read-mode proposal to write-after-approval", ()
 
   assert.equal(result.status, 0);
   assert.equal(JSON.parse(result.stdout).risk, "write-after-approval");
+});
+
+test("CLI elevates affirmative close, rename, and invite proposals", () => {
+  for (const action of ["closing pull request", "renames repository", "invite collaborator"]) {
+    const proposal = {
+      ...valid,
+      action,
+      impact: "Changes GitHub state.",
+      approvalText: `Approve release agent to ${action} on GitHub.`,
+      mode: "read"
+    };
+    const result = runCli(["--format", "json"], proposal);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(result.stdout).risk, "write-after-approval", action);
+  }
 });
 
 test("CLI preserves valid read-only and draft-only proposals", () => {

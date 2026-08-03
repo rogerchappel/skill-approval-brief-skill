@@ -5,6 +5,7 @@ const REQUIRED_FIELDS = ["actor", "targetSystem", "action", "payloadSummary", "i
 const FORBIDDEN_ACTIONS = ["delete account", "send payment", "publish secret", "disable security"];
 const REDACT_KEYS = ["token", "secret", "password", "apiKey", "authorization"];
 const WRITE_VERBS = /\b(?:creat(?:e|es|ed|ing)|updat(?:e|es|ed|ing)|edit(?:s|ed|ing)?|delet(?:e|es|ed|ing)|send(?:s|ing)?|sent|publish(?:es|ed|ing)?|post(?:s|ed|ing)?|upload(?:s|ed|ing)?|modif(?:y|ies|ied|ying)|merg(?:e|es|ed|ing)|writ(?:e|es|ten|ing))\b/i;
+const MUTATING_ACTION_VERBS = /^(?:clos(?:e|es|ed|ing)|renam(?:e|es|ed|ing)|invit(?:e|es|ed|ing))\b/i;
 
 export function createBrief(proposal, options = {}) {
   const forbiddenActions = [...FORBIDDEN_ACTIONS, ...loadPolicy(options.policy).forbiddenActions];
@@ -71,10 +72,13 @@ export function classifyRisk(proposal, forbiddenActions = FORBIDDEN_ACTIONS) {
 }
 
 function describesWrite(proposal) {
-  const description = `${proposal.action ?? ""} ${proposal.impact ?? ""}`
+  const action = String(proposal.action ?? "").trim();
+  const description = `${action} ${proposal.impact ?? ""}`
     .replace(/\bno external writes?\b/gi, "")
     .replace(/\bnothing is (?:published|posted|uploaded|updated|created|written)\b/gi, "");
-  return /\bwrite-after-approval\b/i.test(description) || WRITE_VERBS.test(description);
+  return /\bwrite-after-approval\b/i.test(description)
+    || WRITE_VERBS.test(description)
+    || MUTATING_ACTION_VERBS.test(action);
 }
 
 function loadPolicy(policyPath) {

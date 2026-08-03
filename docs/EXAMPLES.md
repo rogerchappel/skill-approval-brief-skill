@@ -21,7 +21,9 @@ skill-approval-brief fixtures/write-action.json --max-payload-chars 120 --format
 ## Keep Mode Consistent with the Description
 
 `mode` cannot downgrade a write described by `action` or `impact`. This proposal
-is classified as `write-after-approval`, not `read-only`:
+is classified as `write-after-approval`, not `read-only`. The same rule covers
+affirmative variants of `close`, `rename`, and `invite`, such as `closing pull
+request`, `renames repository`, and `invited collaborator`:
 
 ```json
 {
@@ -33,5 +35,21 @@ is classified as `write-after-approval`, not `read-only`:
   "impact": "Creates a public GitHub issue.",
   "rollback": "Close the issue.",
   "approvalText": "Approve triage agent to create issue on GitHub."
+}
+```
+
+A genuinely read-only action remains `read-only`, even when it describes an
+object whose existing state uses one of those words:
+
+```json
+{
+  "actor": "triage agent",
+  "targetSystem": "GitHub",
+  "action": "inspect closed pull requests",
+  "mode": "read",
+  "payloadSummary": "List pull requests that are already closed.",
+  "impact": "Read-only inspection with no external write.",
+  "rollback": "No rollback is needed.",
+  "approvalText": "Approve triage agent to inspect closed pull requests on GitHub."
 }
 ```

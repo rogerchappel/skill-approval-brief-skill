@@ -5,7 +5,10 @@ const REQUIRED_FIELDS = ["actor", "targetSystem", "action", "payloadSummary", "i
 const FORBIDDEN_ACTIONS = ["delete account", "send payment", "publish secret", "disable security"];
 const REDACT_KEYS = ["token", "secret", "password", "apiKey", "authorization"];
 const WRITE_VERBS = /\b(?:creat(?:e|es|ed|ing)|updat(?:e|es|ed|ing)|edit(?:s|ed|ing)?|delet(?:e|es|ed|ing)|send(?:s|ing)?|sent|publish(?:es|ed|ing)?|post(?:s|ed|ing)?|upload(?:s|ed|ing)?|modif(?:y|ies|ied|ying)|merg(?:e|es|ed|ing)|writ(?:e|es|ten|ing))\b/i;
-const MUTATING_ACTION_VERBS = /^(?:clos(?:e|es|ed|ing)|renam(?:e|es|ed|ing)|invit(?:e|es|ed|ing))\b/i;
+// These verbs are only authoritative at the start of the action. That catches
+// affirmative action phrases while leaving descriptions such as "inspect
+// archived repositories" and "list assigned issues" read-only.
+const MUTATING_ACTION_VERBS = /^(?:(?:add|assign|grant|label|lock|open|post|publish|reopen|unassign|unlabel|unlock|upload)(?:s|ed|ing)?|archiv(?:e|es|ed|ing)|clos(?:e|es|ed|ing)|creat(?:e|es|ed|ing)|delet(?:e|es|ed|ing)|disabl(?:e|es|ed|ing)|edit(?:s|ed|ing)?|enabl(?:e|es|ed|ing)|invit(?:e|es|ed|ing)|merg(?:e|es|ed|ing)|modif(?:y|ies|ied|ying)|remov(?:e|es|ed|ing)|renam(?:e|es|ed|ing)|restor(?:e|es|ed|ing)|revok(?:e|es|ed|ing)|send(?:s|ing)?|sent|updat(?:e|es|ed|ing)|writ(?:e|es|ten|ing))\b/i;
 
 export function createBrief(proposal, options = {}) {
   const forbiddenActions = [...FORBIDDEN_ACTIONS, ...loadPolicy(options.policy).forbiddenActions];

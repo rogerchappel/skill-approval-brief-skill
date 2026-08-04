@@ -67,12 +67,15 @@ Classification uses conservative precedence: forbidden actions remain `forbidden
 then write semantics (including `mode: "write"`) become `write-after-approval`,
 then consistent draft and read descriptions become `draft-only` or `read-only`.
 For example, `mode: "read"` combined with `action: "create issue"` is classified
-as `write-after-approval`. Common state-changing actions such as closing a pull
-request, renaming a repository, and inviting a collaborator are treated the same
-way, including their `close`/`closes`/`closed`/`closing` (and corresponding
-`rename` and `invite`) forms. Read-only descriptions such as inspecting closed
-pull requests remain `read-only`. Keep all three fields consistent so reviewers
-see an unambiguous boundary.
+as `write-after-approval`. Common state-changing actions are treated the same
+way across their affirmative inflections. These include lifecycle changes
+(close, reopen, archive, restore, enable, and disable), access and collaboration
+changes (invite, add, remove, grant, and revoke), rename, label and assignment
+changes, and locking or unlocking. For example, `archives repository`, `removed
+collaborator`, and `assigning issue` are writes even with `mode: "read"`.
+Read-only descriptions such as inspecting archived repositories, listing
+assigned issues, or reviewing labeled pull requests remain `read-only`. Keep all
+three fields consistent so reviewers see an unambiguous boundary.
 
 ## Safety Notes
 

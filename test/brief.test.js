@@ -224,7 +224,7 @@ test("conservatively elevates read and draft modes that describe writes", () => 
   }
 });
 
-test("classifies common GitHub mutations as writes despite a read mode hint", () => {
+test("classifies affirmative mutation inflections as writes despite a contradictory mode hint", () => {
   const writeActions = [
     "close pull request",
     "closes pull request",
@@ -237,21 +237,78 @@ test("classifies common GitHub mutations as writes despite a read mode hint", ()
     "invite collaborator",
     "invites collaborator",
     "invited collaborator",
-    "inviting collaborator"
+    "inviting collaborator",
+    "archive repository",
+    "archives repository",
+    "archived repository",
+    "archiving repository",
+    "reopen issue",
+    "reopens issue",
+    "reopened issue",
+    "reopening issue",
+    "lock conversation",
+    "locks conversation",
+    "locked conversation",
+    "locking conversation",
+    "assign issue",
+    "assigns issue",
+    "assigned issue",
+    "assigning issue",
+    "label issue",
+    "labels issue",
+    "labeled issue",
+    "labeling issue",
+    "add label",
+    "adds collaborator",
+    "added assignee",
+    "adding team access",
+    "remove label",
+    "removes collaborator",
+    "removed assignee",
+    "removing team access",
+    "grant access",
+    "grants access",
+    "granted access",
+    "granting access",
+    "revoke access",
+    "revokes access",
+    "revoked access",
+    "revoking access",
+    "unlock conversation",
+    "unassign issue",
+    "unlabel issue",
+    "enable repository feature",
+    "disable repository feature",
+    "restore repository"
   ];
 
-  for (const action of writeActions) {
-    assert.equal(classifyRisk({
-      ...valid,
-      action,
-      impact: "Changes GitHub state.",
-      mode: "read"
-    }), "write-after-approval", action);
+  for (const mode of ["read", "draft"]) {
+    for (const action of writeActions) {
+      assert.equal(classifyRisk({
+        ...valid,
+        action,
+        impact: "Changes GitHub state.",
+        mode
+      }), "write-after-approval", `${mode}: ${action}`);
+    }
   }
 });
 
-test("does not elevate read-only words that merely contain write verb prefixes", () => {
-  for (const action of ["inspect closed pull requests", "review repository renames", "list invited collaborators"]) {
+test("preserves read-only context for resources already in a mutated state", () => {
+  const readActions = [
+    "inspect closed pull requests",
+    "review repository renames",
+    "list invited collaborators",
+    "inspect archived repositories",
+    "view reopened issues",
+    "read locked conversations",
+    "list assigned issues",
+    "inspect labeled pull requests",
+    "review removed collaborators",
+    "audit granted team access"
+  ];
+
+  for (const action of readActions) {
     assert.equal(classifyRisk({
       ...valid,
       action,
@@ -296,8 +353,19 @@ test("CLI elevates a conflicting read-mode proposal to write-after-approval", ()
   assert.equal(JSON.parse(result.stdout).risk, "write-after-approval");
 });
 
-test("CLI elevates affirmative close, rename, and invite proposals", () => {
-  for (const action of ["closing pull request", "renames repository", "invite collaborator"]) {
+test("CLI elevates representative lifecycle, access, and metadata mutations", () => {
+  for (const action of [
+    "closing pull request",
+    "renames repository",
+    "invite collaborator",
+    "archiving repository",
+    "reopens issue",
+    "locked conversation",
+    "assigning issue",
+    "adds label",
+    "removed collaborator",
+    "granting team access"
+  ]) {
     const proposal = {
       ...valid,
       action,
@@ -309,6 +377,22 @@ test("CLI elevates affirmative close, rename, and invite proposals", () => {
 
     assert.equal(result.status, 0, result.stderr);
     assert.equal(JSON.parse(result.stdout).risk, "write-after-approval", action);
+  }
+});
+
+test("CLI preserves read-only context for mutated resources", () => {
+  for (const action of ["inspect archived repositories", "list assigned issues", "review labeled pull requests"]) {
+    const proposal = {
+      ...valid,
+      action,
+      impact: "Read-only inspection with no external write.",
+      approvalText: `Approve release agent to ${action} on GitHub.`,
+      mode: "read"
+    };
+    const result = runCli(["--format", "json"], proposal);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(result.stdout).risk, "read-only", action);
   }
 });
 

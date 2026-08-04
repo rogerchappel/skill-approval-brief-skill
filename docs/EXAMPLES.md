@@ -22,8 +22,10 @@ skill-approval-brief fixtures/write-action.json --max-payload-chars 120 --format
 
 `mode` cannot downgrade a write described by `action` or `impact`. This proposal
 is classified as `write-after-approval`, not `read-only`. The same rule covers
-affirmative variants of `close`, `rename`, and `invite`, such as `closing pull
-request`, `renames repository`, and `invited collaborator`:
+affirmative lifecycle, access, collaboration, labeling, assignment, and locking
+changes. Examples include `closing pull request`, `archives repository`,
+`reopens issue`, `removed collaborator`, `adds label`, `assigning issue`, and
+`locked conversation`:
 
 ```json
 {
@@ -39,7 +41,9 @@ request`, `renames repository`, and `invited collaborator`:
 ```
 
 A genuinely read-only action remains `read-only`, even when it describes an
-object whose existing state uses one of those words:
+object whose existing state uses one of those words. The same distinction keeps
+`inspect archived repositories`, `list assigned issues`, and `review labeled
+pull requests` read-only:
 
 ```json
 {

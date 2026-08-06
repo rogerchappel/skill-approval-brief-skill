@@ -318,6 +318,49 @@ test("preserves read-only context for resources already in a mutated state", () 
   }
 });
 
+test("classifies approval, review-submission, and transfer actions as writes", () => {
+  const writeActions = [
+    "approve pull request",
+    "approves pull request",
+    "approved pull request",
+    "approving pull request",
+    "submit pull request review",
+    "submits pull request review",
+    "submitted pull request review",
+    "submitting pull request review",
+    "transfer repository",
+    "transfers repository",
+    "transferred repository",
+    "transferring repository"
+  ];
+
+  for (const mode of ["read", "draft"]) {
+    for (const action of writeActions) {
+      assert.equal(classifyRisk({
+        ...valid,
+        action,
+        impact: "Changes GitHub state.",
+        mode
+      }), "write-after-approval", `${mode}: ${action}`);
+    }
+  }
+});
+
+test("preserves read-only context for approved, submitted, and transferred resources", () => {
+  for (const action of [
+    "inspect approved pull requests",
+    "list submitted pull request reviews",
+    "inspect transferred repositories"
+  ]) {
+    assert.equal(classifyRisk({
+      ...valid,
+      action,
+      impact: "Read-only inspection with no external write.",
+      mode: "read"
+    }), "read-only", action);
+  }
+});
+
 test("write descriptions take precedence over read-only and draft-only descriptions", () => {
   assert.equal(classifyRisk({
     ...valid,
@@ -382,6 +425,42 @@ test("CLI elevates representative lifecycle, access, and metadata mutations", ()
 
 test("CLI preserves read-only context for mutated resources", () => {
   for (const action of ["inspect archived repositories", "list assigned issues", "review labeled pull requests"]) {
+    const proposal = {
+      ...valid,
+      action,
+      impact: "Read-only inspection with no external write.",
+      approvalText: `Approve release agent to ${action} on GitHub.`,
+      mode: "read"
+    };
+    const result = runCli(["--format", "json"], proposal);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(result.stdout).risk, "read-only", action);
+  }
+});
+
+test("CLI elevates approval, review-submission, and transfer actions", () => {
+  for (const action of ["approving pull request", "submitted pull request review", "transfers repository"]) {
+    const proposal = {
+      ...valid,
+      action,
+      impact: "Changes GitHub state.",
+      approvalText: `Approve release agent to ${action} on GitHub.`,
+      mode: "read"
+    };
+    const result = runCli(["--format", "json"], proposal);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(result.stdout).risk, "write-after-approval", action);
+  }
+});
+
+test("CLI keeps inspection of approved, submitted, and transferred resources read-only", () => {
+  for (const action of [
+    "inspect approved pull requests",
+    "list submitted pull request reviews",
+    "inspect transferred repositories"
+  ]) {
     const proposal = {
       ...valid,
       action,

@@ -8,7 +8,7 @@ const WRITE_VERBS = /\b(?:creat(?:e|es|ed|ing)|updat(?:e|es|ed|ing)|edit(?:s|ed|
 // These verbs are only authoritative at the start of the action. That catches
 // affirmative action phrases while leaving descriptions such as "inspect
 // archived repositories" and "list assigned issues" read-only.
-const MUTATING_ACTION_VERBS = /^(?:(?:add|assign|grant|label|lock|open|post|publish|reopen|unassign|unlabel|unlock|upload)(?:s|ed|ing)?|archiv(?:e|es|ed|ing)|clos(?:e|es|ed|ing)|creat(?:e|es|ed|ing)|delet(?:e|es|ed|ing)|disabl(?:e|es|ed|ing)|edit(?:s|ed|ing)?|enabl(?:e|es|ed|ing)|invit(?:e|es|ed|ing)|merg(?:e|es|ed|ing)|modif(?:y|ies|ied|ying)|remov(?:e|es|ed|ing)|renam(?:e|es|ed|ing)|restor(?:e|es|ed|ing)|revok(?:e|es|ed|ing)|send(?:s|ing)?|sent|updat(?:e|es|ed|ing)|writ(?:e|es|ten|ing))\b/i;
+const MUTATING_ACTION_VERBS = /^(?:(?:add|assign|grant|label|lock|open|post|publish|reopen|unassign|unlabel|unlock|upload)(?:s|ed|ing)?|approv(?:e|es|ed|ing)|archiv(?:e|es|ed|ing)|clos(?:e|es|ed|ing)|creat(?:e|es|ed|ing)|delet(?:e|es|ed|ing)|disabl(?:e|es|ed|ing)|edit(?:s|ed|ing)?|enabl(?:e|es|ed|ing)|invit(?:e|es|ed|ing)|merg(?:e|es|ed|ing)|modif(?:y|ies|ied|ying)|remov(?:e|es|ed|ing)|renam(?:e|es|ed|ing)|restor(?:e|es|ed|ing)|revok(?:e|es|ed|ing)|send(?:s|ing)?|sent|submit(?:s|ted|ting)?|transfer(?:s|red|ring)?|updat(?:e|es|ed|ing)|writ(?:e|es|ten|ing))\b/i;
 
 export function createBrief(proposal, options = {}) {
   const forbiddenActions = [...FORBIDDEN_ACTIONS, ...loadPolicy(options.policy).forbiddenActions];

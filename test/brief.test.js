@@ -361,6 +361,57 @@ test("preserves read-only context for approved, submitted, and transferred resou
   }
 });
 
+test("classifies commenting, replying, scheduling, and starring actions as writes", () => {
+  const writeActions = [
+    "comment on issue",
+    "comments on issue",
+    "commented on issue",
+    "commenting on issue",
+    "reply to discussion",
+    "replies to discussion",
+    "replied to discussion",
+    "replying to discussion",
+    "schedule meeting",
+    "schedules meeting",
+    "scheduled meeting",
+    "scheduling meeting",
+    "star repository",
+    "stars repository",
+    "starred repository",
+    "starring repository",
+    "unstar repository",
+    "unstars repository",
+    "unstarred repository",
+    "unstarring repository"
+  ];
+
+  for (const mode of ["read", "draft"]) {
+    for (const action of writeActions) {
+      assert.equal(classifyRisk({
+        ...valid,
+        action,
+        impact: "Changes remote state.",
+        mode
+      }), "write-after-approval", `${mode}: ${action}`);
+    }
+  }
+});
+
+test("preserves read-only context for comments, scheduled meetings, and starred repositories", () => {
+  for (const action of [
+    "list issue comments",
+    "inspect scheduled meetings",
+    "check starred repositories"
+  ]) {
+    assert.equal(classifyRisk({
+      ...valid,
+      action,
+      impact: "Read-only inspection with no external write.",
+      mode: "read"
+    }), "read-only", action);
+  }
+});
+
 test("write descriptions take precedence over read-only and draft-only descriptions", () => {
   assert.equal(classifyRisk({
     ...valid,
@@ -460,6 +511,48 @@ test("CLI keeps inspection of approved, submitted, and transferred resources rea
     "inspect approved pull requests",
     "list submitted pull request reviews",
     "inspect transferred repositories"
+  ]) {
+    const proposal = {
+      ...valid,
+      action,
+      impact: "Read-only inspection with no external write.",
+      approvalText: `Approve release agent to ${action} on GitHub.`,
+      mode: "read"
+    };
+    const result = runCli(["--format", "json"], proposal);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(result.stdout).risk, "read-only", action);
+  }
+});
+
+test("CLI classifies conversational, scheduling, and starring mutations", () => {
+  for (const action of [
+    "commenting on issue",
+    "replies to discussion",
+    "scheduled meeting",
+    "stars repository",
+    "unstarred repository"
+  ]) {
+    const proposal = {
+      ...valid,
+      action,
+      impact: "Changes remote state.",
+      approvalText: `Approve release agent to ${action} on GitHub.`,
+      mode: "read"
+    };
+    const result = runCli(["--format", "json"], proposal);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(result.stdout).risk, "write-after-approval", action);
+  }
+});
+
+test("CLI preserves read-only conversational, scheduling, and starring contexts", () => {
+  for (const action of [
+    "list issue comments",
+    "inspect scheduled meetings",
+    "check starred repositories"
   ]) {
     const proposal = {
       ...valid,

@@ -25,7 +25,10 @@ is classified as `write-after-approval`, not `read-only`. The same rule covers
 affirmative lifecycle, access, collaboration, labeling, assignment, and locking
 changes. Examples include `closing pull request`, `archives repository`,
 `reopens issue`, `removed collaborator`, `adds label`, `assigning issue`, and
-`locked conversation`:
+`locked conversation`. Repository and deployment mutations such as `forks
+repository`, `committed changes`, `push branch`, and `deploying application`
+are also writes, while `inspect forks`, `review commits`, `list branches`, and
+`inspect deployments` remain read-only:
 
 ```json
 {

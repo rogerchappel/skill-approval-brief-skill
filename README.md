@@ -73,11 +73,12 @@ way across their affirmative inflections. These include lifecycle changes
 changes (invite, add, remove, grant, and revoke), rename, label and assignment
 changes, locking or unlocking, approving pull requests, submitting pull request
 reviews, transferring repositories, commenting or replying, scheduling meetings,
-and starring or unstarring repositories. For example, `archives repository`,
-`commenting on issue`, `scheduled meeting`, and `stars repository` are writes
+starring or unstarring repositories, and repository or deployment mutations
+(fork, commit, push, and deploy). For example, `archives repository`,
+`commenting on issue`, `pushes branch`, and `deploying application` are writes
 even with `mode: "read"`. Read-only descriptions such as inspecting archived
-repositories, listing issue comments, inspecting scheduled meetings, or checking
-starred repositories remain `read-only`. Keep all three fields consistent so
+repositories, listing issue comments, reviewing commits, listing branches, or
+inspecting deployments remain `read-only`. Keep all three fields consistent so
 reviewers see an unambiguous boundary.
 
 ## Safety Notes

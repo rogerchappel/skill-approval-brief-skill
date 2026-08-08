@@ -318,6 +318,62 @@ test("preserves read-only context for resources already in a mutated state", () 
   }
 });
 
+test("classifies repository and deployment mutations as writes", () => {
+  for (const actions of [
+    ["fork repository", "forks repository", "forked repository", "forking repository"],
+    ["commit changes", "commits changes", "committed changes", "committing changes"],
+    ["push branch", "pushes branch", "pushed branch", "pushing branch"],
+    ["deploy application", "deploys application", "deployed application", "deploying application"]
+  ]) {
+    for (const action of actions) {
+      assert.equal(classifyRisk({
+        ...valid,
+        action,
+        impact: "Changes remote state.",
+        mode: "read"
+      }), "write-after-approval", action);
+    }
+  }
+});
+
+test("preserves read-only context when inspecting repository and deployment records", () => {
+  for (const action of [
+    "inspect forks",
+    "review commits",
+    "list branches",
+    "inspect deployments"
+  ]) {
+    assert.equal(classifyRisk({
+      ...valid,
+      action,
+      impact: "Read-only inspection with no external write.",
+      mode: "read"
+    }), "read-only", action);
+  }
+});
+
+test("CLI conservatively classifies push actions while preserving branch inspection", () => {
+  const writeResult = runCli(["--format", "json"], {
+    ...valid,
+    action: "push branch",
+    impact: "Changes remote state.",
+    mode: "read",
+    approvalText: "Approve release agent to push branch on GitHub."
+  });
+  const readResult = runCli(["--format", "json"], {
+    ...valid,
+    action: "list branches",
+    impact: "Read-only inspection with no external write.",
+    mode: "read",
+    approvalText: "Approve release agent to list branches on GitHub."
+  });
+
+  assert.equal(writeResult.status, 0);
+  assert.equal(JSON.parse(writeResult.stdout).risk, "write-after-approval");
+  assert.equal(readResult.status, 0);
+  assert.equal(JSON.parse(readResult.stdout).risk, "read-only");
+});
+
 test("classifies approval, review-submission, and transfer actions as writes", () => {
   const writeActions = [
     "approve pull request",

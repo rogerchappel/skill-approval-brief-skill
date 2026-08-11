@@ -468,6 +468,44 @@ test("preserves read-only context for comments, scheduled meetings, and starred 
   }
 });
 
+test("classifies cancellation, movement, visibility, and dismissal actions as writes", () => {
+  const writeActions = [
+    ["cancel scheduled meeting", "cancels scheduled meeting", "cancelled scheduled meeting", "cancelling scheduled meeting"],
+    ["move issue to another repository", "moves issue to another repository", "moved issue to another repository", "moving issue to another repository"],
+    ["set repository visibility to public", "sets repository visibility to public", "setting repository visibility to public"],
+    ["dismiss pull request review", "dismisses pull request review", "dismissed pull request review", "dismissing pull request review"]
+  ];
+
+  for (const mode of ["read", "draft"]) {
+    for (const actions of writeActions) {
+      for (const action of actions) {
+        assert.equal(classifyRisk({
+          ...valid,
+          action,
+          impact: "Changes remote state.",
+          mode
+        }), "write-after-approval", `${mode}: ${action}`);
+      }
+    }
+  }
+});
+
+test("preserves read-only context for cancelled, moved, configured, and dismissed resources", () => {
+  for (const action of [
+    "inspect cancelled meetings",
+    "review moved issues",
+    "inspect repository visibility settings",
+    "list dismissed pull request reviews"
+  ]) {
+    assert.equal(classifyRisk({
+      ...valid,
+      action,
+      impact: "Read-only inspection with no external write.",
+      mode: "read"
+    }), "read-only", action);
+  }
+});
+
 test("write descriptions take precedence over read-only and draft-only descriptions", () => {
   assert.equal(classifyRisk({
     ...valid,
@@ -621,6 +659,33 @@ test("CLI preserves read-only conversational, scheduling, and starring contexts"
 
     assert.equal(result.status, 0, result.stderr);
     assert.equal(JSON.parse(result.stdout).risk, "read-only", action);
+  }
+});
+
+test("CLI distinguishes external-state actions from inspection of their results", () => {
+  const cases = [
+    ["cancel scheduled meeting", "inspect cancelled meetings"],
+    ["move issue to another repository", "review moved issues"],
+    ["set repository visibility to public", "inspect repository visibility settings"],
+    ["dismiss pull request review", "list dismissed pull request reviews"]
+  ];
+
+  for (const [writeAction, readAction] of cases) {
+    for (const [action, expectedRisk, impact] of [
+      [writeAction, "write-after-approval", "Changes remote state."],
+      [readAction, "read-only", "Read-only inspection with no external write."]
+    ]) {
+      const result = runCli(["--format", "json"], {
+        ...valid,
+        action,
+        impact,
+        approvalText: `Approve release agent to ${action} on GitHub.`,
+        mode: "read"
+      });
+
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(JSON.parse(result.stdout).risk, expectedRisk, action);
+    }
   }
 });
 

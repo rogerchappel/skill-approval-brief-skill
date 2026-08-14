@@ -81,7 +81,12 @@ push, and deploy). For example, `archives repository`, `cancel scheduled meeting
 descriptions such as inspecting archived or cancelled resources, reviewing moved
 issues, inspecting visibility settings, listing dismissed reviews, reviewing
 commits, listing branches, or inspecting deployments remain `read-only`. Keep all
-three fields consistent so reviewers see an unambiguous boundary.
+three fields consistent so reviewers see an unambiguous boundary. Passive impact
+wording can also describe existing state without proposing a mutation: `Review an
+already created pull request` remains `read-only`, and a draft that `summarizes an
+updated issue` remains `draft-only`. By contrast, an affirmative action such as
+`create issue` remains `write-after-approval` even when its impact mentions an
+existing updated resource.
 
 ## Safety Notes
 

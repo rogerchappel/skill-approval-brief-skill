@@ -318,6 +318,30 @@ test("preserves read-only context for resources already in a mutated state", () 
   }
 });
 
+test("treats passive past-participle impact wording as historical state", () => {
+  assert.equal(classifyRisk({
+    ...valid,
+    action: "inspect pull request",
+    impact: "Review an already created pull request.",
+    mode: "read"
+  }), "read-only");
+  assert.equal(classifyRisk({
+    ...valid,
+    action: "prepare notes",
+    impact: "Nothing is sent; draft summarizes an updated issue.",
+    mode: "draft"
+  }), "draft-only");
+});
+
+test("retains write precedence for affirmative actions with passive impact wording", () => {
+  assert.equal(classifyRisk({
+    ...valid,
+    action: "create issue",
+    impact: "Records an updated request.",
+    mode: "read"
+  }), "write-after-approval");
+});
+
 test("classifies repository and deployment mutations as writes", () => {
   for (const actions of [
     ["fork repository", "forks repository", "forked repository", "forking repository"],

@@ -740,6 +740,33 @@ test("CLI preserves valid read-only and draft-only proposals", () => {
   }
 });
 
+test("CLI preserves modes when impacts describe existing mutated resources", () => {
+  const proposals = [
+    {
+      ...valid,
+      action: "inspect pull request",
+      impact: "Review an already created pull request.",
+      approvalText: "Approve release agent to inspect pull request on GitHub.",
+      mode: "read",
+      expectedRisk: "read-only"
+    },
+    {
+      ...valid,
+      action: "prepare notes",
+      impact: "Nothing is sent; draft summarizes an updated issue.",
+      approvalText: "Approve release agent to prepare notes on GitHub.",
+      mode: "draft",
+      expectedRisk: "draft-only"
+    }
+  ];
+
+  for (const { expectedRisk, ...proposal } of proposals) {
+    const result = runCli(["--format", "json"], proposal);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(result.stdout).risk, expectedRisk);
+  }
+});
+
 test("blocks forbidden actions", () => {
   assert.throws(() => createBrief({
     ...valid,

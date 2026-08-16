@@ -5,6 +5,7 @@ const REQUIRED_FIELDS = ["actor", "targetSystem", "action", "payloadSummary", "i
 const FORBIDDEN_ACTIONS = ["delete account", "send payment", "publish secret", "disable security"];
 const REDACT_KEYS = ["token", "secret", "password", "apiKey", "authorization"];
 const WRITE_VERBS = /\b(?:creat(?:e|es|ed|ing)|updat(?:e|es|ed|ing)|edit(?:s|ed|ing)?|delet(?:e|es|ed|ing)|send(?:s|ing)?|sent|publish(?:es|ed|ing)?|post(?:s|ed|ing)?|upload(?:s|ed|ing)?|modif(?:y|ies|ied|ying)|merg(?:e|es|ed|ing)|writ(?:e|es|ten|ing))\b/i;
+const PASSIVE_WRITE_STATE = /\b(?:(?:an?|the|this|that|these|those)\s+(?:already\s+)?|(?:already|previously)\s+)(?:created|updated|edited|deleted|sent|published|posted|uploaded|modified|merged|written)\b/gi;
 // These verbs are only authoritative at the start of the action. That catches
 // affirmative action phrases while leaving descriptions such as "inspect
 // archived repositories" and "list assigned issues" read-only.
@@ -78,7 +79,8 @@ function describesWrite(proposal) {
   const action = String(proposal.action ?? "").trim();
   const description = `${action} ${proposal.impact ?? ""}`
     .replace(/\bno external writes?\b/gi, "")
-    .replace(/\bnothing is (?:published|posted|uploaded|updated|created|written)\b/gi, "");
+    .replace(/\bnothing is (?:published|posted|sent|uploaded|updated|created|written)\b/gi, "")
+    .replace(PASSIVE_WRITE_STATE, "");
   return /\bwrite-after-approval\b/i.test(description)
     || WRITE_VERBS.test(description)
     || MUTATING_ACTION_VERBS.test(action);

@@ -318,6 +318,30 @@ test("preserves read-only context for resources already in a mutated state", () 
   }
 });
 
+test("treats passive past-participle impact wording as historical state", () => {
+  assert.equal(classifyRisk({
+    ...valid,
+    action: "inspect pull request",
+    impact: "Review an already created pull request.",
+    mode: "read"
+  }), "read-only");
+  assert.equal(classifyRisk({
+    ...valid,
+    action: "prepare notes",
+    impact: "Nothing is sent; draft summarizes an updated issue.",
+    mode: "draft"
+  }), "draft-only");
+});
+
+test("retains write precedence for affirmative actions with passive impact wording", () => {
+  assert.equal(classifyRisk({
+    ...valid,
+    action: "create issue",
+    impact: "Records an updated request.",
+    mode: "read"
+  }), "write-after-approval");
+});
+
 test("classifies repository and deployment mutations as writes", () => {
   for (const actions of [
     ["fork repository", "forks repository", "forked repository", "forking repository"],
@@ -712,6 +736,33 @@ test("CLI preserves valid read-only and draft-only proposals", () => {
   for (const { expectedRisk, ...proposal } of proposals) {
     const result = runCli(["--format", "json"], proposal);
     assert.equal(result.status, 0);
+    assert.equal(JSON.parse(result.stdout).risk, expectedRisk);
+  }
+});
+
+test("CLI preserves modes when impacts describe existing mutated resources", () => {
+  const proposals = [
+    {
+      ...valid,
+      action: "inspect pull request",
+      impact: "Review an already created pull request.",
+      approvalText: "Approve release agent to inspect pull request on GitHub.",
+      mode: "read",
+      expectedRisk: "read-only"
+    },
+    {
+      ...valid,
+      action: "prepare notes",
+      impact: "Nothing is sent; draft summarizes an updated issue.",
+      approvalText: "Approve release agent to prepare notes on GitHub.",
+      mode: "draft",
+      expectedRisk: "draft-only"
+    }
+  ];
+
+  for (const { expectedRisk, ...proposal } of proposals) {
+    const result = runCli(["--format", "json"], proposal);
+    assert.equal(result.status, 0, result.stderr);
     assert.equal(JSON.parse(result.stdout).risk, expectedRisk);
   }
 });

@@ -333,6 +333,48 @@ test("treats passive past-participle impact wording as historical state", () => 
   }), "draft-only");
 });
 
+test("treats passive participles as existing objects of read inspections", () => {
+  for (const action of [
+    "review updated documentation",
+    "inspect deleted records",
+    "audit published reports",
+    "compare modified settings"
+  ]) {
+    assert.equal(classifyRisk({
+      ...valid,
+      action,
+      impact: "Read-only inspection with no external write.",
+      mode: "read"
+    }), "read-only", action);
+  }
+});
+
+test("CLI distinguishes existing-state objects from proposed writes", () => {
+  const readResult = runCli(["--format", "json"], {
+    ...valid,
+    action: "review updated documentation",
+    impact: "Read-only inspection with no external write.",
+    mode: "read",
+    approvalText: "Approve release agent to review updated documentation on GitHub."
+  });
+  assert.equal(readResult.status, 0);
+  assert.equal(JSON.parse(readResult.stdout).risk, "read-only");
+
+  for (const proposal of [
+    { action: "update deleted records", impact: "Changes GitHub state." },
+    { action: "review updated documentation", impact: "Then delete stale documentation." }
+  ]) {
+    const result = runCli(["--format", "json"], {
+      ...valid,
+      ...proposal,
+      mode: "read",
+      approvalText: `Approve release agent to ${proposal.action} on GitHub.`
+    });
+    assert.equal(result.status, 0);
+    assert.equal(JSON.parse(result.stdout).risk, "write-after-approval", proposal.action);
+  }
+});
+
 test("retains write precedence for affirmative actions with passive impact wording", () => {
   assert.equal(classifyRisk({
     ...valid,

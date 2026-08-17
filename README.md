@@ -84,7 +84,10 @@ commits, listing branches, or inspecting deployments remain `read-only`. Keep al
 three fields consistent so reviewers see an unambiguous boundary. Passive impact
 wording can also describe existing state without proposing a mutation: `Review an
 already created pull request` remains `read-only`, and a draft that `summarizes an
-updated issue` remains `draft-only`. By contrast, an affirmative action such as
+updated issue` remains `draft-only`. In read mode, passive participles used as the
+object of an inspection have the same existing-state meaning: `review updated
+documentation` and `inspect deleted records` remain `read-only`. Impact text that
+proposes a write still takes precedence. By contrast, an affirmative action such as
 `create issue` remains `write-after-approval` even when its impact mentions an
 existing updated resource.
 

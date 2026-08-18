@@ -74,13 +74,15 @@ changes (invite, add, remove, grant, and revoke), rename, label and assignment
 changes, locking or unlocking, approving pull requests, submitting pull request
 reviews, dismissing reviews, transferring or moving resources, commenting or
 replying, scheduling or cancelling meetings, setting visibility, starring or
-unstarring repositories, and repository or deployment mutations (fork, commit,
-push, and deploy). For example, `archives repository`, `cancel scheduled meeting`,
+unstarring repositories, marking items (including marking issues as duplicate),
+reacting or unreacting, pinning or unpinning, and repository or deployment
+mutations (fork, commit, push, and deploy). For example, `archives repository`, `cancel scheduled meeting`,
 `moves issue to another repository`, `sets repository visibility to public`, and
 `dismissed pull request review` are writes even with `mode: "read"`. Read-only
 descriptions such as inspecting archived or cancelled resources, reviewing moved
 issues, inspecting visibility settings, listing dismissed reviews, reviewing
-commits, listing branches, or inspecting deployments remain `read-only`. Keep all
+commits, listing branches, inspecting deployments, listing duplicate-marked issues,
+inspecting reacted-to comments, or reviewing pinned discussions remain `read-only`. Keep all
 three fields consistent so reviewers see an unambiguous boundary. Passive impact
 wording can also describe existing state without proposing a mutation: `Review an
 already created pull request` remains `read-only`, and a draft that `summarizes an

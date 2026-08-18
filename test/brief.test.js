@@ -572,6 +572,44 @@ test("preserves read-only context for cancelled, moved, configured, and dismisse
   }
 });
 
+test("classifies marking, reaction, and pinning actions as writes", () => {
+  const writeActions = [
+    ["mark issue as duplicate", "marks issue as duplicate", "marked issue as duplicate", "marking issue as duplicate"],
+    ["react to issue comment", "reacts to issue comment", "reacted to issue comment", "reacting to issue comment"],
+    ["unreact to issue comment", "unreacts to issue comment", "unreacted to issue comment", "unreacting to issue comment"],
+    ["pin discussion", "pins discussion", "pinned discussion", "pinning discussion"],
+    ["unpin discussion", "unpins discussion", "unpinned discussion", "unpinning discussion"]
+  ];
+
+  for (const mode of ["read", "draft"]) {
+    for (const actions of writeActions) {
+      for (const action of actions) {
+        assert.equal(classifyRisk({
+          ...valid,
+          action,
+          impact: "Changes GitHub state.",
+          mode
+        }), "write-after-approval", `${mode}: ${action}`);
+      }
+    }
+  }
+});
+
+test("preserves read-only context for marked, reacted-to, and pinned resources", () => {
+  for (const action of [
+    "list issues marked as duplicate",
+    "inspect comments reacted to by the release team",
+    "review pinned discussions"
+  ]) {
+    assert.equal(classifyRisk({
+      ...valid,
+      action,
+      impact: "Read-only inspection with no external write.",
+      mode: "read"
+    }), "read-only", action);
+  }
+});
+
 test("write descriptions take precedence over read-only and draft-only descriptions", () => {
   assert.equal(classifyRisk({
     ...valid,
@@ -739,6 +777,34 @@ test("CLI distinguishes external-state actions from inspection of their results"
   for (const [writeAction, readAction] of cases) {
     for (const [action, expectedRisk, impact] of [
       [writeAction, "write-after-approval", "Changes remote state."],
+      [readAction, "read-only", "Read-only inspection with no external write."]
+    ]) {
+      const result = runCli(["--format", "json"], {
+        ...valid,
+        action,
+        impact,
+        approvalText: `Approve release agent to ${action} on GitHub.`,
+        mode: "read"
+      });
+
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(JSON.parse(result.stdout).risk, expectedRisk, action);
+    }
+  }
+});
+
+test("CLI distinguishes marking, reaction, and pinning mutations from inspection", () => {
+  const cases = [
+    ["marking issue as duplicate", "list issues marked as duplicate"],
+    ["reacts to issue comment", "inspect comments reacted to by the release team"],
+    ["unreacted to issue comment", "list issue comment reactions"],
+    ["pin discussion", "review pinned discussions"],
+    ["unpinning discussion", "list pinned discussions"]
+  ];
+
+  for (const [writeAction, readAction] of cases) {
+    for (const [action, expectedRisk, impact] of [
+      [writeAction, "write-after-approval", "Changes GitHub state."],
       [readAction, "read-only", "Read-only inspection with no external write."]
     ]) {
       const result = runCli(["--format", "json"], {

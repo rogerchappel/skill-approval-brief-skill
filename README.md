@@ -75,7 +75,8 @@ changes, locking or unlocking, approving pull requests, submitting pull request
 reviews, dismissing reviews, transferring or moving resources, commenting or
 replying, scheduling or cancelling meetings, setting visibility, starring or
 unstarring repositories, marking items (including marking issues as duplicate),
-reacting or unreacting, pinning or unpinning, and repository or deployment
+reacting or unreacting, pinning or unpinning, credential and integration changes
+(rotate, replace, and install), and repository or deployment
 mutations (fork, commit, push, and deploy). For example, `archives repository`, `cancel scheduled meeting`,
 `moves issue to another repository`, `sets repository visibility to public`, and
 `dismissed pull request review` are writes even with `mode: "read"`. Read-only

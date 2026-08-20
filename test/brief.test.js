@@ -318,6 +318,27 @@ test("preserves read-only context for resources already in a mutated state", () 
   }
 });
 
+test("distinguishes rotate, replace, and install actions from inspection", () => {
+  for (const [writeAction, readAction] of [
+    ["rotate deployment credential", "inspect rotated deployment credentials"],
+    ["replaces webhook endpoint", "review replaced webhook endpoints"],
+    ["installed repository app", "list installed repository apps"]
+  ]) {
+    assert.equal(classifyRisk({
+      ...valid,
+      action: writeAction,
+      impact: "Changes external state.",
+      mode: "read"
+    }), "write-after-approval", writeAction);
+    assert.equal(classifyRisk({
+      ...valid,
+      action: readAction,
+      impact: "Read-only inspection with no external write.",
+      mode: "read"
+    }), "read-only", readAction);
+  }
+});
+
 test("treats passive past-participle impact wording as historical state", () => {
   assert.equal(classifyRisk({
     ...valid,
@@ -372,6 +393,27 @@ test("CLI distinguishes existing-state objects from proposed writes", () => {
     });
     assert.equal(result.status, 0);
     assert.equal(JSON.parse(result.stdout).risk, "write-after-approval", proposal.action);
+  }
+});
+
+test("CLI distinguishes credential and installation mutations from inspection", () => {
+  for (const [action, expectedRisk, impact] of [
+    ["rotate deployment credential", "write-after-approval", "The old credential stops working and a new credential is installed."],
+    ["replace webhook endpoint", "write-after-approval", "Changes external state."],
+    ["install repository app", "write-after-approval", "Changes external state."],
+    ["inspect rotated deployment credentials", "read-only", "Read-only inspection with no external write."],
+    ["review replaced webhook endpoints", "read-only", "Read-only inspection with no external write."],
+    ["list installed repository apps", "read-only", "Read-only inspection with no external write."]
+  ]) {
+    const result = runCli(["--format", "json"], {
+      ...valid,
+      action,
+      impact,
+      approvalText: `Approve release agent to ${action} on GitHub.`,
+      mode: "read"
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(result.stdout).risk, expectedRisk, action);
   }
 });
 

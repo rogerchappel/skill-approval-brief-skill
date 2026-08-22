@@ -460,6 +460,63 @@ test("preserves read-only context when inspecting repository and deployment reco
   }
 });
 
+test("classifies common external-state actions as writes despite read mode", () => {
+  for (const action of [
+    "change repository visibility",
+    "share document",
+    "start deployment",
+    "stop server",
+    "configure webhook",
+    "sync records"
+  ]) {
+    assert.equal(classifyRisk({
+      ...valid,
+      action,
+      impact: "Changes external state.",
+      mode: "read"
+    }), "write-after-approval", action);
+  }
+});
+
+test("preserves inspection of existing changed, shared, and configured state", () => {
+  for (const action of [
+    "inspect changed repository visibility",
+    "review shared documents",
+    "list started deployments",
+    "inspect stopped servers",
+    "audit configured webhooks",
+    "compare synced records"
+  ]) {
+    assert.equal(classifyRisk({
+      ...valid,
+      action,
+      impact: "Read-only inspection with no external write.",
+      mode: "read"
+    }), "read-only", action);
+  }
+});
+
+test("CLI classifies common external-state actions as writes despite read mode", () => {
+  for (const action of [
+    "change repository visibility",
+    "share document",
+    "start deployment",
+    "stop server",
+    "configure webhook",
+    "sync records"
+  ]) {
+    const result = runCli(["--format", "json"], {
+      ...valid,
+      action,
+      impact: "Changes external state.",
+      mode: "read",
+      approvalText: `Approve release agent to ${action} on GitHub.`
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(result.stdout).risk, "write-after-approval", action);
+  }
+});
+
 test("CLI conservatively classifies push actions while preserving branch inspection", () => {
   const writeResult = runCli(["--format", "json"], {
     ...valid,

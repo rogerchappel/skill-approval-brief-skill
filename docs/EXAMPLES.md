@@ -30,6 +30,12 @@ repository`, `committed changes`, `push branch`, and `deploying application`
 are also writes, while `inspect forks`, `review commits`, `list branches`, and
 `inspect deployments` remain read-only:
 
+Other affirmative mutation families follow the same rule: changing repository
+visibility, sharing a document, starting or stopping a service, configuring a
+webhook, and syncing records all require approval even when `mode` is `read`.
+Inspection of existing state remains read-only, including `review shared
+documents`, `list started deployments`, and `audit configured webhooks`.
+
 ```json
 {
   "actor": "triage agent",

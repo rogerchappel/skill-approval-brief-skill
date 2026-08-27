@@ -36,6 +36,13 @@ webhook, and syncing records all require approval even when `mode` is `read`.
 Inspection of existing state remains read-only, including `review shared
 documents`, `list started deployments`, and `audit configured webhooks`.
 
+Compound actions do not inherit the risk of their opening inspection verb. A
+later affirmative mutation after `and` or `then` takes precedence, so `review
+and approve pull request`, `inspect then deploy application`, and `audit and
+close issue` are `write-after-approval`. By contrast, `review approved pull
+requests`, `inspect deployed applications`, and `audit closed issues` describe
+existing state and stay `read-only`.
+
 ```json
 {
   "actor": "triage agent",

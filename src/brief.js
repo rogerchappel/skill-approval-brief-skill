@@ -12,6 +12,11 @@ const PASSIVE_WRITE_PARTICIPLE = /\b(?:changed|configured|created|deleted|edited
 // affirmative action phrases while leaving descriptions such as "inspect
 // archived repositories" and "list assigned issues" read-only.
 const MUTATING_ACTION_VERBS = /^(?:(?:add|assign|change|comment|configure|deploy|fork|grant|install|label|lock|mark|open|post|publish|react|reopen|replace|rotate|share|start|stop|sync|unassign|unlabel|unlock|unreact|upload)(?:s|ed|ing)?|approv(?:e|es|ed|ing)|archiv(?:e|es|ed|ing)|cancel(?:s|led|ling)?|clos(?:e|es|ed|ing)|commit(?:s|ted|ting)?|creat(?:e|es|ed|ing)|delet(?:e|es|ed|ing)|disabl(?:e|es|ed|ing)|dismiss(?:es|ed|ing)?|edit(?:s|ed|ing)?|enabl(?:e|es|ed|ing)|invit(?:e|es|ed|ing)|merg(?:e|es|ed|ing)|modif(?:y|ies|ied|ying)|mov(?:e|es|ed|ing)|pins?|pinned|pinning|push(?:es|ed|ing)?|remov(?:e|es|ed|ing)|renam(?:e|es|ed|ing)|repl(?:y|ies|ied|ying)|restor(?:e|es|ed|ing)|revok(?:e|es|ed|ing)|schedul(?:e|es|ed|ing)|send(?:s|ing)?|sent|set(?:s|ting)?|stars?|starred|starring|submit(?:s|ted|ting)?|transfer(?:s|red|ring)?|unpins?|unpinned|unpinning|unstars?|unstarred|unstarring|updat(?:e|es|ed|ing)|writ(?:e|es|ten|ing))\b/i;
+// A sequenced mutation is still affirmative even when an inspection verb
+// starts the action. Requiring an explicit connector avoids treating past
+// participles in existing-state phrases (for example, "review approved PRs")
+// as commands.
+const COMPOUND_MUTATING_ACTION = /\b(?:and|then)\b[\s,:;-]*(?:(?:add|assign|change|comment|configure|deploy|fork|grant|install|label|lock|mark|open|post|publish|react|reopen|replace|rotate|share|start|stop|sync|unassign|unlabel|unlock|unreact|upload)(?:s|ed|ing)?|approv(?:e|es|ed|ing)|archiv(?:e|es|ed|ing)|cancel(?:s|led|ling)?|clos(?:e|es|ed|ing)|commit(?:s|ted|ting)?|creat(?:e|es|ed|ing)|delet(?:e|es|ed|ing)|disabl(?:e|es|ed|ing)|dismiss(?:es|ed|ing)?|edit(?:s|ed|ing)?|enabl(?:e|es|ed|ing)|invit(?:e|es|ed|ing)|merg(?:e|es|ed|ing)|modif(?:y|ies|ied|ying)|mov(?:e|es|ed|ing)|pins?|pinned|pinning|push(?:es|ed|ing)?|remov(?:e|es|ed|ing)|renam(?:e|es|ed|ing)|repl(?:y|ies|ied|ying)|restor(?:e|es|ed|ing)|revok(?:e|es|ed|ing)|schedul(?:e|es|ed|ing)|send(?:s|ing)?|sent|set(?:s|ting)?|stars?|starred|starring|submit(?:s|ted|ting)?|transfer(?:s|red|ring)?|unpins?|unpinned|unpinning|unstars?|unstarred|unstarring|updat(?:e|es|ed|ing)|writ(?:e|es|ten|ing))\b/i;
 
 export function createBrief(proposal, options = {}) {
   const forbiddenActions = [...FORBIDDEN_ACTIONS, ...loadPolicy(options.policy).forbiddenActions];
@@ -88,7 +93,8 @@ function describesWrite(proposal) {
     .replace(PASSIVE_WRITE_STATE, "");
   return /\bwrite-after-approval\b/i.test(description)
     || WRITE_VERBS.test(description)
-    || MUTATING_ACTION_VERBS.test(action);
+    || MUTATING_ACTION_VERBS.test(action)
+    || COMPOUND_MUTATING_ACTION.test(action);
 }
 
 function loadPolicy(policyPath) {

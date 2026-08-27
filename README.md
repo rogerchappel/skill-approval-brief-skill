@@ -85,6 +85,12 @@ issues, inspecting visibility settings, listing dismissed reviews, reviewing
 commits, listing branches, inspecting deployments, listing duplicate-marked issues,
 inspecting reacted-to comments, or reviewing pinned discussions remain `read-only`. Keep all
 three fields consistent so reviewers see an unambiguous boundary. Passive impact
+Compound or sequenced actions use the same write precedence: `review and approve
+pull request`, `inspect then deploy application`, and `audit and close issue`
+are `write-after-approval`. The connector makes the later mutation affirmative;
+without it, inspection of existing state such as `review approved pull requests`,
+`inspect deployed applications`, or `audit closed issues` remains `read-only`.
+Passive impact
 wording can also describe existing state without proposing a mutation: `Review an
 already created pull request` remains `read-only`, and a draft that `summarizes an
 updated issue` remains `draft-only`. In read mode, passive participles used as the

@@ -224,6 +224,36 @@ test("conservatively elevates read and draft modes that describe writes", () => 
   }
 });
 
+test("classifies compound affirmative mutations as writes", () => {
+  for (const action of [
+    "review and approve pull request",
+    "inspect then deploy application",
+    "audit and close issue"
+  ]) {
+    assert.equal(classifyRisk({
+      ...valid,
+      action,
+      impact: "Read-only inspection with no external write.",
+      mode: "read"
+    }), "write-after-approval", action);
+  }
+});
+
+test("keeps inspection of existing compound-action states read-only", () => {
+  for (const action of [
+    "review approved pull requests",
+    "inspect deployed applications",
+    "audit closed issues"
+  ]) {
+    assert.equal(classifyRisk({
+      ...valid,
+      action,
+      impact: "Read-only inspection with no external write.",
+      mode: "read"
+    }), "read-only", action);
+  }
+});
+
 test("classifies affirmative mutation inflections as writes despite a contradictory mode hint", () => {
   const writeActions = [
     "close pull request",
@@ -742,6 +772,29 @@ test("CLI elevates a conflicting read-mode proposal to write-after-approval", ()
 
   assert.equal(result.status, 0);
   assert.equal(JSON.parse(result.stdout).risk, "write-after-approval");
+});
+
+test("CLI applies compound-action precedence without misreading existing states", () => {
+  for (const [action, expectedRisk] of [
+    ["review and approve pull request", "write-after-approval"],
+    ["inspect then deploy application", "write-after-approval"],
+    ["audit and close issue", "write-after-approval"],
+    ["review approved pull requests", "read-only"],
+    ["inspect deployed applications", "read-only"],
+    ["audit closed issues", "read-only"]
+  ]) {
+    const proposal = {
+      ...valid,
+      action,
+      impact: "Read-only inspection with no external write.",
+      approvalText: `Approve release agent to ${action} on GitHub.`,
+      mode: "read"
+    };
+    const result = runCli(["--format", "json"], proposal);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(result.stdout).risk, expectedRisk, action);
+  }
 });
 
 test("CLI elevates representative lifecycle, access, and metadata mutations", () => {

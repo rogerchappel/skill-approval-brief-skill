@@ -67,8 +67,11 @@ Classification uses conservative precedence: forbidden actions remain `forbidden
 then write semantics (including `mode: "write"`) become `write-after-approval`,
 then consistent draft and read descriptions become `draft-only` or `read-only`.
 For example, `mode: "read"` combined with `action: "create issue"` is classified
-as `write-after-approval`. Common state-changing actions are treated the same
-way across their affirmative inflections. These include lifecycle changes
+as `write-after-approval`. Explicit impact boundaries such as “does not create,
+update, or write any records” and “no files are written” remain read-only when the action is an
+inspection; affirmative or compound mutation wording still takes precedence.
+Common state-changing actions are treated the same way across their affirmative
+inflections. These include lifecycle changes
 (close, reopen, archive, restore, enable, and disable), access and collaboration
 changes (invite, add, remove, grant, and revoke), rename, label and assignment
 changes, locking or unlocking, approving pull requests, submitting pull request

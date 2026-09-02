@@ -8,6 +8,7 @@ const WRITE_VERBS = /\b(?:creat(?:e|es|ed|ing)|updat(?:e|es|ed|ing)|edit(?:s|ed|
 const PASSIVE_WRITE_STATE = /\b(?:(?:an?|the|this|that|these|those)\s+(?:already\s+)?|(?:already|previously)\s+)(?:changed|configured|created|deleted|edited|installed|marked|merged|modified|pinned|posted|published|reacted|replaced|rotated|sent|shared|started|stopped|synced|updated|uploaded|written)\b/gi;
 const READ_INSPECTION_ACTION = /^(?:audit|check|compare|examine|inspect|list|read|review|view)\b/i;
 const PASSIVE_WRITE_PARTICIPLE = /\b(?:changed|configured|created|deleted|edited|installed|marked|merged|modified|pinned|posted|published|reacted|replaced|rotated|sent|shared|started|stopped|synced|updated|uploaded|written)\b/gi;
+const NEGATED_WRITE_BOUNDARY = /\b(?:(?:does?|do|did|will|would|can|could)\s+not\s+(?:create|update|write)(?:(?:\s*,\s*(?:(?:and|or)\s+)?|\s+(?:and|or)\s+)(?:create|update|write))*\s+(?:any\s+)?(?:data|files?|records?|resources?|state)|no\s+(?:data|files?|records?|resources?|state)\s+(?:are|is)\s+(?:created|updated|written))\b/gi;
 // These verbs are only authoritative at the start of the action. That catches
 // affirmative action phrases while leaving descriptions such as "inspect
 // archived repositories" and "list assigned issues" read-only.
@@ -90,6 +91,7 @@ function describesWrite(proposal) {
   const description = `${actionForWriteScan} ${proposal.impact ?? ""}`
     .replace(/\bno external writes?\b/gi, "")
     .replace(/\bnothing is (?:published|posted|sent|uploaded|updated|created|written)\b/gi, "")
+    .replace(NEGATED_WRITE_BOUNDARY, "")
     .replace(PASSIVE_WRITE_STATE, "");
   return /\bwrite-after-approval\b/i.test(description)
     || WRITE_VERBS.test(description)

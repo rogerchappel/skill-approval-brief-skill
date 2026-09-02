@@ -760,6 +760,48 @@ test("write descriptions take precedence over read-only and draft-only descripti
   }), "write-after-approval");
 });
 
+test("recognizes explicit negative write boundaries for read-only inspections", () => {
+  for (const impact of [
+    "This read-only inspection does not create, update, or write any records.",
+    "No files are written and nothing changes."
+  ]) {
+    assert.equal(classifyRisk({
+      ...valid,
+      mode: "read",
+      action: "inspect existing records",
+      impact
+    }), "read-only", impact);
+  }
+});
+
+test("does not suppress affirmative or compound mutation wording", () => {
+  for (const [action, impact] of [
+    ["inspect existing records", "Creates a local record of the inspection."],
+    ["inspect existing records", "Updates the audit index."],
+    ["inspect existing records", "Writes a report file."],
+    ["inspect existing records and update the audit index", "No files are written locally."]
+  ]) {
+    assert.equal(classifyRisk({ ...valid, mode: "read", action, impact }), "write-after-approval", `${action}: ${impact}`);
+  }
+});
+
+test("CLI preserves explicit negative write boundaries", () => {
+  for (const impact of [
+    "This read-only inspection does not create, update, or write any records.",
+    "No files are written and nothing changes."
+  ]) {
+    const result = runCli([], {
+      ...valid,
+      mode: "read",
+      action: "inspect existing records",
+      impact,
+      approvalText: "Approve release agent to inspect existing records on GitHub."
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(result.stdout).risk, "read-only", impact);
+  }
+});
+
 test("CLI elevates a conflicting read-mode proposal to write-after-approval", () => {
   const proposal = {
     ...valid,

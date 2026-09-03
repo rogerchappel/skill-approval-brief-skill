@@ -761,16 +761,18 @@ test("write descriptions take precedence over read-only and draft-only descripti
 });
 
 test("recognizes explicit negative write boundaries for read-only inspections", () => {
-  for (const impact of [
-    "This read-only inspection does not create, update, or write any records.",
-    "No files are written and nothing changes."
+  for (const [mode, impact, expectedRisk] of [
+    ["read", "This read-only inspection does not create, update, or write any records.", "read-only"],
+    ["read", "No files are written and nothing changes.", "read-only"],
+    ["read", "This inspection does not send messages or post comments.", "read-only"],
+    ["draft", "Nothing is deployed or merged.", "draft-only"]
   ]) {
     assert.equal(classifyRisk({
       ...valid,
-      mode: "read",
-      action: "inspect existing records",
+      mode,
+      action: mode === "read" ? "inspect existing records" : "prepare release notes",
       impact
-    }), "read-only", impact);
+    }), expectedRisk, impact);
   }
 });
 
@@ -779,26 +781,30 @@ test("does not suppress affirmative or compound mutation wording", () => {
     ["inspect existing records", "Creates a local record of the inspection."],
     ["inspect existing records", "Updates the audit index."],
     ["inspect existing records", "Writes a report file."],
-    ["inspect existing records and update the audit index", "No files are written locally."]
+    ["inspect existing records and update the audit index", "No files are written locally."],
+    ["inspect existing records and post a comment", "Does not send messages."],
+    ["deploy application", "Nothing is deployed or merged."]
   ]) {
     assert.equal(classifyRisk({ ...valid, mode: "read", action, impact }), "write-after-approval", `${action}: ${impact}`);
   }
 });
 
 test("CLI preserves explicit negative write boundaries", () => {
-  for (const impact of [
-    "This read-only inspection does not create, update, or write any records.",
-    "No files are written and nothing changes."
+  for (const [mode, action, impact, expectedRisk] of [
+    ["read", "inspect existing records", "This read-only inspection does not create, update, or write any records.", "read-only"],
+    ["read", "inspect existing records", "No files are written and nothing changes.", "read-only"],
+    ["read", "review notification settings", "This inspection does not send messages or post comments.", "read-only"],
+    ["draft", "prepare release notes", "Nothing is deployed or merged.", "draft-only"]
   ]) {
     const result = runCli([], {
       ...valid,
-      mode: "read",
-      action: "inspect existing records",
+      mode,
+      action,
       impact,
-      approvalText: "Approve release agent to inspect existing records on GitHub."
+      approvalText: `Approve release agent to ${action} on GitHub.`
     });
     assert.equal(result.status, 0, result.stderr);
-    assert.equal(JSON.parse(result.stdout).risk, "read-only", impact);
+    assert.equal(JSON.parse(result.stdout).risk, expectedRisk, impact);
   }
 });
 

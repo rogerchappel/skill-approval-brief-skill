@@ -68,8 +68,9 @@ then write semantics (including `mode: "write"`) become `write-after-approval`,
 then consistent draft and read descriptions become `draft-only` or `read-only`.
 For example, `mode: "read"` combined with `action: "create issue"` is classified
 as `write-after-approval`. Explicit impact boundaries such as “does not create,
-update, or write any records” and “no files are written” remain read-only when the action is an
-inspection; affirmative or compound mutation wording still takes precedence.
+update, or write any records”, “does not send messages or post comments”, and
+“nothing is deployed or merged” preserve a consistent read-only or draft-only
+mode. Affirmative or compound mutation wording still takes precedence.
 Common state-changing actions are treated the same way across their affirmative
 inflections. These include lifecycle changes
 (close, reopen, archive, restore, enable, and disable), access and collaboration
@@ -87,14 +88,13 @@ descriptions such as inspecting archived or cancelled resources, reviewing moved
 issues, inspecting visibility settings, listing dismissed reviews, reviewing
 commits, listing branches, inspecting deployments, listing duplicate-marked issues,
 inspecting reacted-to comments, or reviewing pinned discussions remain `read-only`. Keep all
-three fields consistent so reviewers see an unambiguous boundary. Passive impact
+three fields consistent so reviewers see an unambiguous boundary.
 Compound or sequenced actions use the same write precedence: `review and approve
 pull request`, `inspect then deploy application`, and `audit and close issue`
 are `write-after-approval`. The connector makes the later mutation affirmative;
 without it, inspection of existing state such as `review approved pull requests`,
 `inspect deployed applications`, or `audit closed issues` remains `read-only`.
-Passive impact
-wording can also describe existing state without proposing a mutation: `Review an
+Passive impact wording can also describe existing state without proposing a mutation: `Review an
 already created pull request` remains `read-only`, and a draft that `summarizes an
 updated issue` remains `draft-only`. In read mode, passive participles used as the
 object of an inspection have the same existing-state meaning: `review updated
